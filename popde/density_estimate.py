@@ -8,6 +8,23 @@ class  densityestimator(object):
     and choices of bw  for each dimenion of input data
     compute density estimator  with bandwoth optimized 
     using cross validation
+
+    Methods:
+       kde_awkde(evaluate_grid): train and fit a kde return kde object
+       loocv(bw, alpha): find best bw from grid of values
+       estimation(): return kde values on grid of values
+
+    Data attributes:
+        data: input data from observation [_ndimensions]
+        bw : bw choices [_ndimensions]
+        alpha: smoothing parameter for adaptive bandwidth
+        minX: min of values on which to evaluate kde
+        maxX: max of values on which to evaluate kde
+        kwarg: flag on parameter units
+    Usage:
+    >>> xvals = np.random.rand(5,5)
+    >>> bwarr = np.arange(0, 1.1, 0.1)
+    >>> densityestimator.__init__(xvals, bwarray)
     """
     def __init__(self, data, bw, alpha, minX, maxX, paramflag='log'):
         self.data = data
