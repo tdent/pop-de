@@ -64,8 +64,8 @@ class  densityestimator(object):
             samples = np.log(samplevalues)
         figure_of_merit = {}
         for gbw in bwgrid:
-        for alp in alphagrid:
-            FOM[(gbw, alp)] = loocv_awkde(sample, gbw, alp)
+            for alp in alphagrid:
+                FOM[(gbw, alp)] = loocv_awkde(sample, gbw, alp)
         optvalues = max(FOM.items(), key=operator.itemgetter(1))[0]
         optbw, optalpha  = optvalues[0], optvalues[1]
 
