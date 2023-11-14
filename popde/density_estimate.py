@@ -2,11 +2,11 @@
 from awkde import GaussianKDE  #we will need our own code 
 
 
-class  densityestimator(object):
+class  DensityEstimator(object):
     """
     A class that given input values of observations
-    and choices of bw  for each dimenion of input data
-    compute density estimator  with bandwoth optimized 
+    and choices of bw  for each dimensions of input data
+    compute density estimator  with bandwidth optimized 
     using cross validation
 
     Methods:
