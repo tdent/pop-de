@@ -1,5 +1,4 @@
-# First script for iterative KDE
-from awkde import GaussianKDE  #we will need our own code 
+from awkde import GaussianKDE 
 
 
 class  DensityEstimator(object):
