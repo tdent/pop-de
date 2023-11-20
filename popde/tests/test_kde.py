@@ -1,1 +1,1 @@
-#this code will generate a data and use kde code to generate kde and plot it
+# Script to generate sample data and use kde code to generate a kde and plot it for testing 
