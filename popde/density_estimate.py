@@ -1,3 +1,128 @@
+class SimpleGaussianKernelDensityEstimation:
+    """
+    Kernel Density Estimation (KDE) using Gaussian Kernels
+
+    Parameters:
+    -----------
+    data : array-like
+        The input data for which KDE will be estimated.
+
+    bandwidth : float, optional (default=1.0)
+        Bandwidth parameter controlling the width of the kernels.
+
+    kernel : str, optional (default='gaussian')
+        The kernel function used for smoothing. Supported kernels: 'gaussian',
+
+    Attributes:
+    -----------
+    data : array-like
+        The input data for which KDE is estimated.
+
+    bandwidth : float
+        Bandwidth parameter controlling the width of the kernels.
+
+    kernel : str
+        The kernel function used for smoothing.
+
+    Methods:
+    --------
+    fit(data, bandwidth=None, kernel=None):
+        Fit the KDE to new data.
+
+    evaluate(points):
+        Evaluate the KDE at given data points.
+
+    Examples:
+    ---------
+    # Create a KDE instance and fit it to data
+    data = np.random.randn(100)
+    kde = SimpleGaussianKernelDensityEstimation(data)
+    kde.fit()
+
+    # Evaluate the KDE at new data points
+    new_data = np.linspace(-3, 3, 100)
+    density_values = kde.evaluate(new_data)
+    """
+
+    def __init__(self, data, bandwidth=1.0, kernel='gaussian'):
+        """
+        Initialize the KernelDensityEstimation object.
+
+        Parameters:
+        -----------
+        data : array-like
+            The input data for which KDE will be estimated.
+
+        bandwidth : float, optional (default=1.0)
+            Bandwidth parameter controlling the width of the kernels.
+            Larger bandwidths lead to smoother density estimates.
+
+        kernel : str, optional (default='gaussian')
+            The kernel function used for smoothing.
+        """
+        import numpy as np
+
+        self.data = np.asarray(data)
+        self.bandwidth = bandwidth
+        self.kernel = kernel
+
+    def fit(self, data=None, bandwidth=None, kernel=None):
+        """
+        Fit the KDE to new data.
+
+        Parameters:
+        -----------
+        data : array-like, optional
+            The input data for which KDE will be estimated. If None, the data provided during initialization is used.
+
+        bandwidth : float, optional
+            Bandwidth parameter controlling the width of the kernels.
+            Larger bandwidths lead to smoother density estimates. If None, the bandwidth provided during initialization is used.
+
+        kernel : str, optional
+            The kernel function used for smoothing. If None, the kernel provided during initialization is used.
+        """
+        if data is not None:
+            self.data = np.asarray(data)
+        if bandwidth is not None:
+            self.bandwidth = bandwidth
+        if kernel is not None:
+            self.kernel = kernel
+
+    def evaluate(self, points):
+        """
+        Evaluate the KDE at given data points.
+
+        Parameters:
+        -----------
+        points : array-like
+            The data points at which the KDE will be evaluated.
+
+        Returns:
+        --------
+        density_values : array-like
+            The estimated density values at the given data points.
+        """
+        import scipy
+        from scipy.stats import norm
+
+        points = np.asarray(points)
+        if self.kernel == 'gaussian':
+            kernel_function = norm(loc=0, scale=self.bandwidth).pdf
+        else:
+            raise ValueError("Unsupported kernel. Supported kernels: 'gaussian',")
+
+        density_values = np.zeros_like(points, dtype=float)
+
+        for data_point in self.data:
+            density_values += kernel_function((points - data_point) / self.bandwidth)
+
+        # Normalize by the number of data points and bandwidth
+        density_values /= (len(self.data) * self.bandwidth)
+
+        return density_values
+
+
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
     A class that given input values of observations and a choice of
