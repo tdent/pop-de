@@ -1,4 +1,4 @@
-class  SimpleGaussianKDE(object):
+class  AdaptiveKDEWithBandWidthUsingLeaveOneOutCrossValidation():
     """
     A class that given input values of observations
     and choices of bw  for each dimensions of input data
