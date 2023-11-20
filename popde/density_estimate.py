@@ -7,8 +7,9 @@ class AdaptiveKDELeaveOneOutCrossValidation():
 
     Methods:
        kde_awkde(evaluate_grid): train and fit a kde return kde object
-       loocv(bw, alpha): find best bw from grid of values
-       estimation(): return kde values on grid of values
+       loocv(bw, alpha): find best bw from grid of values using
+           cross validated likelihood
+       estimation(): optimize and return kde values on grid of values
 
     Data attributes:
         data: input data from observation [_ndimensions]
@@ -52,9 +53,9 @@ class AdaptiveKDELeaveOneOutCrossValidation():
             return kde, y
         return y
 
-    def loocv_awkde(self, sample, bw, alpha):
+    def loocv(self, sample, bw, alpha):
         """
-        Calculate likelihood FORM using leave one out cross validation for 
+        Calculate likelihood FOM using leave one out cross validation for
         finding best choice of bandwidth and alpha
         """
         fom = 0.
@@ -76,7 +77,7 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         fom = {}  # Dictionary holding optimization figure of merit
         for bw in bwgrid:
             for alp in alphagrid:
-                fom[(gbw, alp)] = loocv_awkde(samples, bw, alp)
+                fom[(gbw, alp)] = loocv(samples, bw, alp)
         optvalues = max(fom.items(), key=operator.itemgetter(1))[0]
         self.optbw, self.optalpha = optvalues[0], optvalues[1]
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
