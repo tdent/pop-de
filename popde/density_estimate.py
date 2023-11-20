@@ -55,9 +55,8 @@ class  SimpleGaussianKDE(object):
 
     def loocv_awkde(self, sample, bwchoice, alphachoice):
         """
-        leave one out cross validation 
-        we need to add scipy.optimization for 
-        finding best choice of bw and alpha
+        use of leave one out cross validation for 
+        finding best choice of bandwidth and alpha
         """
         fom = 0.0
         for i in range(len(sample)):
