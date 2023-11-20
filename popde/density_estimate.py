@@ -44,6 +44,7 @@ class  DensityEstimator(object):
         ret_kde optional 
             if True kde will be output with estimated kde-values 
         """
+        from awkde import GaussianKDE  
         kde = GaussianKDE(glob_bw=gl_bandwidth)
         kde.fit(x[:, np.newaxis])
         if isinstance(x_grid, (list, tuple, np.ndarray)) == False:
