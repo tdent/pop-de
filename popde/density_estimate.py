@@ -42,8 +42,10 @@ class SimpleKernelDensityEstimation:
 
         self.data = np.asarray(data)
         self.bandwidth = bandwidth
-        self.kernel = kernel
-
+        if self.kernel == 'gaussian':
+            self.kernel = kernel
+        else:
+            raise ValueError("Unsupported kernel. Supported kernels: 'gaussian',")
 
     def evaluate(self, points):
         """
@@ -63,10 +65,7 @@ class SimpleKernelDensityEstimation:
         from scipy.stats import norm
 
         points = np.asarray(points)
-        if self.kernel == 'gaussian':
-            kernel_function = norm(loc=0, scale=self.bandwidth).pdf
-        else:
-            raise ValueError("Unsupported kernel. Supported kernels: 'gaussian',")
+        kernel_function = norm(loc=0, scale=self.bandwidth).pdf
 
         density_values = np.zeros_like(points, dtype=float)
 
