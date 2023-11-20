@@ -1,7 +1,4 @@
-from awkde import GaussianKDE 
-
-
-class  DensityEstimator(object):
+class  SimpleGaussianKDE(object):
     """
     A class that given input values of observations
     and choices of bw  for each dimensions of input data
