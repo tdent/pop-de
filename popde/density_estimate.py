@@ -211,8 +211,8 @@ class SimpleGaussianKernelDensityEstimation:
         return density_values
 
 # Example usage:
-# data = np.random.randn(1000)
-# kde = KernelDensityEstimation(data)
+# data = np.random.randn(100)
+# kde = SimpleGaussianKernelDensityEstimation(data)
 # kde.fit()
 # new_data = np.linspace(-3, 3, 100)
 # density_values = kde.evaluate(new_data)
