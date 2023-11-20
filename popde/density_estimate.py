@@ -1,8 +1,8 @@
-class  AdaptiveKDEWithBandWidthUsingLeaveOneOutCrossValidation():
+class AdaptiveKDEWithBandWidthUsingLeaveOneOutCrossValidation():
     """
-    A class that given input values of observations
-    and choices of bw  for each dimensions of input data
-    compute density estimator  with bandwidth optimized 
+    A class that given input values of observations and choices of
+    bw for each dimension of input data
+    compute density estimator with bandwidth optimized 
     using cross validation
 
     Methods:
@@ -26,10 +26,9 @@ class  AdaptiveKDEWithBandWidthUsingLeaveOneOutCrossValidation():
         self.data = data
         self.bw = bw
         slef.alpha = alpha
-        self.minX = 0 #in multi-Dimensions we need to have list with each dimenions min val
+        self.minX = 0 #in multi-Dimensions we need to have list with each dimension min val
         self.maxX =100
-      
-    
+
     def kde_awkde(self, x, x_grid, bandwidth, alpha, ret_kde=False):
         """Kernel Density Estimation with awkde 
         inputs:
@@ -84,5 +83,3 @@ class  AdaptiveKDEWithBandWidthUsingLeaveOneOutCrossValidation():
 
         kdeval = kde_awkde(samples, x_gridvalues, alp=optalpha, gl_bandwidth=optbw)
     return kdeval, optbw, optalpha 
-
-        
