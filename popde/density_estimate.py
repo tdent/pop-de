@@ -35,7 +35,7 @@ class SimpleKernelDensityEstimation:
             Bandwidth parameter controlling the width of the kernels.
             Larger bandwidths lead to smoother density estimates.
 
-        kernel : str, optional (default='gaussian')
+        kernel : list of str, optional (default=['gaussian'])
             The kernel function used for smoothing.
         """
         import numpy as np
@@ -43,7 +43,7 @@ class SimpleKernelDensityEstimation:
         self.data = np.asarray(data)
         self.bandwidth = bandwidth
         if self.kernel in kernel:
-            self.kernel = kernel
+            self.kernel = kernel[0]#may need to fix this
         else:
             raise NotImplementedError("Unsupported kernel. Supported kernels: 'gaussian',")
 
