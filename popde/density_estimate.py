@@ -22,7 +22,7 @@ class SimpleKernelDensityEstimation:
     density_values = kde.evaluate(new_data)
     """
 
-    def __init__(self, data, bandwidth=1.0, kernel='gaussian'):
+    def __init__(self, data, bandwidth=1.0, kernel=['gaussian']):
         """
         Initialize the KernelDensityEstimation object.
 
@@ -42,10 +42,10 @@ class SimpleKernelDensityEstimation:
 
         self.data = np.asarray(data)
         self.bandwidth = bandwidth
-        if self.kernel == 'gaussian':
+        if self.kernel in kernel:
             self.kernel = kernel
         else:
-            raise ValueError("Unsupported kernel. Supported kernels: 'gaussian',")
+            raise NotImplementedError("Unsupported kernel. Supported kernels: 'gaussian',")
 
     def evaluate(self, points):
         """
