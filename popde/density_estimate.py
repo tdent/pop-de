@@ -22,7 +22,7 @@ class SimpleKernelDensityEstimation:
     density_values = kde.evaluate(new_data)
     """
 
-    def __init__(self, data, bandwidth=1.0, kernel=['gaussian'], **kwargs):
+    def __init__(self, data, bandwidth=1.0, kernel=['gaussian'], dim_names=None):
         """
         Initialize the KernelDensityEstimation object.
 
@@ -37,6 +37,10 @@ class SimpleKernelDensityEstimation:
 
         kernel : list of str, optional (default=['gaussian'])
             The kernel function used for smoothing.
+
+        dim_names : list of the dimension names (m1,z, chi_eff) 
+             If dim_names is not Nonecheck that the dimensionality
+             of the data array matches with len(dim_names)
         """
         import numpy as np
 
@@ -46,7 +50,16 @@ class SimpleKernelDensityEstimation:
             self.kernel = kernel[0]#may need to fix this
         else:
             raise NotImplementedError("Unsupported kernel. Supported kernels: 'gaussian',")
-        
+
+        self.dim_names = dim_names
+        if dim_names is not None:
+            self.check_dimensionality()
+
+
+   def check_dimensionality(self):
+        if len(self.data.shape) != len(self.dim_names):
+            raise ValueError("Dimensionality of data array does not match the number of dimension names.")
+
 
     def evaluate(self, points):
         """
