@@ -1,6 +1,6 @@
 class SimpleKernelDensityEstimation:
     """
-    Kernel Density Estimation (KDE) using Kernels
+    Fit and evaluate general Kernel Density Estimation (KDE) 
 
     Methods:
     --------
