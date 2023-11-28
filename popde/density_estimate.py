@@ -52,7 +52,7 @@ class SimpleKernelDensityEstimation:
 
 
    def check_dimensionality(self):
-        if len(self.data.shape) != len(self.dim_names):
+        if len(self.data.shape[0]) != len(self.dim_names):
             raise ValueError("Dimensionality of data array does not match the number of dimension names.")
 
 
