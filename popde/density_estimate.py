@@ -1,3 +1,5 @@
+import numpy as np
+
 class SimpleKernelDensityEstimation:
     """
     Fit and evaluate general Kernel Density Estimation (KDE) 
