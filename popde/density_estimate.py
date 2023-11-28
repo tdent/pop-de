@@ -15,16 +15,15 @@ class SimpleKernelDensityEstimation:
     Examples:
     ---------
     # Create a KDE instance and fit it to data
-    data = np.random.randn(100)
+    data = np.random.randn((100, 100))
     kde = SimpleGaussianKernelDensityEstimation(data)
-    kde.fit()
 
     # Evaluate the KDE at new data points
-    new_data = np.linspace(-3, 3, 100)
+    new_data = np.array(np.linspace(-3, 3, 100).tolist(), np.linspace(-3, 3, 100).tolist())
     density_values = kde.evaluate(new_data)
     """
 
-    def __init__(self, data, bandwidth=1.0, kernel=['gaussian'], dim_names=None):
+    def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
         """
         Initialize the KernelDensityEstimation object.
 
@@ -37,19 +36,15 @@ class SimpleKernelDensityEstimation:
             Bandwidth parameter controlling the width of the kernels.
             Larger bandwidths lead to smoother density estimates.
 
-        kernel : list of str, optional (default=['gaussian'])
-            The kernel function used for smoothing.
+        kernel : choice of kernel, default='gaussian'
 
         dim_names : list of the dimension names (m1,z, chi_eff) 
              If dim_names is not Nonecheck that the dimensionality
              of the data array matches with len(dim_names)
         """
-        self.data = np.asarray(data)
+        self.data = np.asarray(data) 
         self.bandwidth = bandwidth
-        if self.kernel in kernel:
-            self.kernel = kernel[0]#may need to fix this
-        else:
-            raise NotImplementedError("Unsupported kernel. Supported kernels: 'gaussian',")
+        self.kernel = kernel 
 
         self.dim_names = dim_names
         if dim_names is not None:
