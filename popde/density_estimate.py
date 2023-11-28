@@ -44,8 +44,6 @@ class SimpleKernelDensityEstimation:
              If dim_names is not Nonecheck that the dimensionality
              of the data array matches with len(dim_names)
         """
-        import numpy as np
-
         self.data = np.asarray(data)
         self.bandwidth = bandwidth
         if self.kernel in kernel:
