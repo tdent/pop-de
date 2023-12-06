@@ -2,7 +2,7 @@ import numpy as np
 
 class SimpleKernelDensityEstimation:
     """
-    Fit and evaluate general Kernel Density Estimation (KDE) 
+    Fit and evaluate multi-dimensional Kernel Density Estimation (KDE) 
 
     Methods:
     --------
