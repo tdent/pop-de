@@ -51,7 +51,6 @@ class SimpleKernelDensityEstimation:
         if len(self.data.shape[0]) != len(self.dim_names):
             raise ValueError("Dimensionality of data array does not match the number of dimension names.")
 
-
     def evaluate(self, points):
         """
         Evaluate the KDE at given data points.
@@ -70,9 +69,9 @@ class SimpleKernelDensityEstimation:
         import scipy
         from scipy.stats import gaussian_kde 
 
-        points = np.asarray(points).T
+        # scipy takes data with shape (n_dimensions, n_samples)
         kernel_function = gaussian_kde(self.data.T, bw_method=self.bandwidth)
-
+        points = np.asarray(points).T
         density_values = kernel_function(points)
 
         return density_values
