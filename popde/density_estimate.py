@@ -65,20 +65,15 @@ class SimpleKernelDensityEstimation:
         --------
         density_values : array-like
             The estimated density values at the given data points.
+            using standard gaussian distribution
         """
         import scipy
-        from scipy.stats import norm
+        from scipy.stats import gaussian_kde 
 
-        points = np.asarray(points)
-        kernel_function = norm(loc=0, scale=self.bandwidth).pdf
+        points = np.asarray(points).T
+        kernel_function = gaussian_kde(self.data.T, bw_method=self.bandwidth)
 
-        density_values = np.zeros_like(points, dtype=float)
-
-        for data_point in self.data:
-            density_values += kernel_function((points - data_point) / self.bandwidth)
-
-        # Normalize by the number of data points and bandwidth
-        density_values /= (len(self.data) * self.bandwidth)
+        density_values = kernel_function(points)
 
         return density_values
 
