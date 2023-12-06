@@ -22,7 +22,6 @@ class SimpleKernelDensityEstimation:
     new_data = np.array(np.linspace(-3, 3, 100).tolist(), np.linspace(-3, 3, 100).tolist())
     density_values = kde.evaluate(new_data)
     """
-
     def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
         """
         Initialize the KernelDensityEstimation object.
@@ -34,7 +33,6 @@ class SimpleKernelDensityEstimation:
         self.dim_names = dim_names
         if dim_names is not None:
             self.check_dimensionality()
-
 
    def check_dimensionality(self):
         if len(self.data.shape[0]) != len(self.dim_names):
