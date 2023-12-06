@@ -6,8 +6,8 @@ class SimpleKernelDensityEstimation:
 
     Methods:
     --------
-    fit(data, bandwidth=None, kernel=None):
-        Fit the KDE to new data.
+    check_dimensionality():
+        check if the data matches the dimensions of KDE.
 
     evaluate(points):
         Evaluate the KDE at given data points.
