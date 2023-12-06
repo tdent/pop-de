@@ -27,7 +27,7 @@ class SimpleKernelDensityEstimation:
         Initialize the KernelDensityEstimation object.
         data: array-like, shape (n_samples, n_features)
                points of the data define each kernel position
-               each row is a point, eachcolumn is a feature.
+               each row is a point, each column is a parameter.
         kwargs:
             dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff') 
                         values must be strings
