@@ -26,21 +26,6 @@ class SimpleKernelDensityEstimation:
     def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
         """
         Initialize the KernelDensityEstimation object.
-
-        Parameters:
-        -----------
-        data : array-like
-            The input data for which KDE will be estimated.
-
-        bandwidth : float, optional (default=1.0)
-            Bandwidth parameter controlling the width of the kernels.
-            Larger bandwidths lead to smoother density estimates.
-
-        kernel : choice of kernel, default='gaussian'
-
-        dim_names : list of the dimension names (m1,z, chi_eff) 
-             If dim_names is not Nonecheck that the dimensionality
-             of the data array matches with len(dim_names)
         """
         self.data = np.asarray(data) 
         self.bandwidth = bandwidth
