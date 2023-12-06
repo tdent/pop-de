@@ -28,6 +28,8 @@ class SimpleKernelDensityEstimation:
         data: array-like, shape (n_samples, n_features)
                points of the data define each kernel position
                each row is a point, eachcolumn is a feature.
+        kwargs:
+            dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff') 
         """
         if len(data.shape) != 2:
             raise ValueError("data must have shape (n_samples, n_features).")
@@ -41,6 +43,10 @@ class SimpleKernelDensityEstimation:
             self.check_dimensionality()
 
    def check_dimensionality(self):
+       """
+       Check if the dimension of KDE matches the parameters on which we evaluate KDE.
+        Raises ValueError
+       """
         if len(self.data.shape[0]) != len(self.dim_names):
             raise ValueError("Dimensionality of data array does not match the number of dimension names.")
 
