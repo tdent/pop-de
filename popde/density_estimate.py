@@ -25,7 +25,13 @@ class SimpleKernelDensityEstimation:
     def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
         """
         Initialize the KernelDensityEstimation object.
+        data: array-like, shape (n_samples, n_features)
+              points of the data define each kernel position
+              each row is a point, eachcolumn is a feature.
         """
+        if len(data.shape) != 2:
+            raise ValueError("data must have shape (n_samples, n_features).")
+
         self.data = np.asarray(data) 
         self.bandwidth = bandwidth
         self.kernel = kernel 
