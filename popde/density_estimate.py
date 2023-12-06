@@ -30,6 +30,7 @@ class SimpleKernelDensityEstimation:
                each row is a point, eachcolumn is a feature.
         kwargs:
             dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff') 
+                        values must be strings
         """
         if len(data.shape) != 2:
             raise ValueError("data must have shape (n_samples, n_features).")
