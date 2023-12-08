@@ -12,7 +12,7 @@ class SimpleKernelDensityEstimation:
     evaluate(points):
         Evaluate the KDE at given data points.
     """
-    def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
+    def __init__(self, data, bandwidth=1.0, dim_names=None):
         """
         Initialize the KernelDensityEstimation object.
         data: array-like, shape (n_samples, n_features)
@@ -27,9 +27,8 @@ class SimpleKernelDensityEstimation:
 
         self.data = np.asarray(data) 
         self.bandwidth = bandwidth
-        self.kernel = kernel 
-
         self.dim_names = dim_names
+
         if dim_names is not None:
             self.check_dimensionality()
 
