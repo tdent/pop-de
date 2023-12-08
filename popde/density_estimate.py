@@ -19,6 +19,7 @@ class SimpleKernelDensityEstimation:
                points of the data define each kernel position
                each row is a point, each column is a parameter.
         kwargs:
+            bandwidth : The bandwidth of the kernel used for smoothing. Default is 1.0
             dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff') 
                         values must be strings
         """
