@@ -34,8 +34,7 @@ class SimpleKernelDensityEstimation:
 
     def check_dimensionality(self):
         """
-        Check if the dimension of KDE matches the parameters on which we evaluate KDE.
-        Raises ValueError
+        Check if the dimension of training data matches the number of parameter names.
         """
         if len(self.data.shape[0]) != len(self.dim_names):
             raise ValueError("Dimensionality of data array does not match the number of dimension names.")
