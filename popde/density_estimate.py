@@ -24,12 +24,10 @@ class SimpleKernelDensityEstimation:
                         values must be strings
         """
         if len(data.shape) != 2:
-            raise ValueError("data must have shape (n_samples, n_features).")
-
+            raise ValueError("Data must have shape (n_samples, n_features).")
         self.data = np.asarray(data) 
         self.bandwidth = bandwidth
         self.dim_names = dim_names
-
         if dim_names is not None:
             self.check_dimensionality()
 
@@ -37,8 +35,9 @@ class SimpleKernelDensityEstimation:
         """
         Check if the dimension of training data matches the number of parameter names.
         """
-        if len(self.data.shape[0]) != len(self.dim_names):
-            raise ValueError("Dimensionality of data array does not match the number of dimension names.")
+        if self.data.shape[1] != len(self.dim_names):
+            raise ValueError("Dimensionality of data array does not match the
+                             " number of dimension names.")
 
     def evaluate(self, points):
         """
