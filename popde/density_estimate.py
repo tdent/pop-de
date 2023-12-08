@@ -36,8 +36,8 @@ class SimpleKernelDensityEstimation:
         Check if the dimension of training data matches the number of parameter names.
         """
         if self.data.shape[1] != len(self.dim_names):
-            raise ValueError("Dimensionality of data array does not match the
-                             " number of dimension names.")
+            raise ValueError("Dimensionality of data array does not match "
+                             "the number of dimension names.")
 
     def evaluate(self, points):
         """
