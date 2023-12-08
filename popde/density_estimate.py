@@ -15,11 +15,14 @@ class SimpleKernelDensityEstimation:
     Examples:
     ---------
     # Create a KDE instance and fit it to data
-    data = np.random.randn((100, 100))
-    kde = SimpleGaussianKernelDensityEstimation(data)
+    data = np.random.randn(100, 100)
+    kde = SimpleKernelDensityEstimation(data)
 
     # Evaluate the KDE at new data points
-    new_data = np.array(np.linspace(-3, 3, 100).tolist(), np.linspace(-3, 3, 100).tolist())
+    x = np.linspace(0., 1., 100)
+    y = np.linspace(0., 1., 100)
+    XX, YY = np.meshgrid(x, y)
+    new_data = np.array(list(map(np.ravel, [XX, YY]))).T
     density_values = kde.evaluate(new_data)
     """
     def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
@@ -43,11 +46,11 @@ class SimpleKernelDensityEstimation:
         if dim_names is not None:
             self.check_dimensionality()
 
-   def check_dimensionality(self):
-       """
-       Check if the dimension of KDE matches the parameters on which we evaluate KDE.
+    def check_dimensionality(self):
+        """
+        Check if the dimension of KDE matches the parameters on which we evaluate KDE.
         Raises ValueError
-       """
+        """
         if len(self.data.shape[0]) != len(self.dim_names):
             raise ValueError("Dimensionality of data array does not match the number of dimension names.")
 
