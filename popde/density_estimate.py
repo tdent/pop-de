@@ -11,19 +11,6 @@ class SimpleKernelDensityEstimation:
 
     evaluate(points):
         Evaluate the KDE at given data points.
-
-    Examples:
-    ---------
-    # Create a KDE instance and fit it to data
-    data = np.random.randn(100, 100)
-    kde = SimpleKernelDensityEstimation(data)
-
-    # Evaluate the KDE at new data points
-    x = np.linspace(0., 1., 100)
-    y = np.linspace(0., 1., 100)
-    XX, YY = np.meshgrid(x, y)
-    new_data = np.array(list(map(np.ravel, [XX, YY]))).T
-    density_values = kde.evaluate(new_data)
     """
     def __init__(self, data, bandwidth=1.0, kernel='gaussian', dim_names=None):
         """
