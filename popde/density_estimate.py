@@ -69,7 +69,6 @@ class SimpleKernelDensityEstimation:
             The estimated density values at the given data points.
             using standard gaussian distribution
         """
-        import scipy
         from scipy.stats import gaussian_kde 
 
         # scipy takes data with shape (n_dimensions, n_samples)
