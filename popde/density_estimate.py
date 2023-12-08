@@ -1,3 +1,70 @@
+import numpy as np
+
+class SimpleKernelDensityEstimation:
+    """
+    Fit and evaluate multi-dimensional Kernel Density Estimation (KDE) 
+
+    Methods:
+    --------
+    check_dimensionality():
+        check if the data matches the dimensions of KDE.
+
+    evaluate(points):
+        Evaluate the KDE at given data points.
+    """
+    def __init__(self, data, bandwidth=1.0, dim_names=None):
+        """
+        Initialize the KernelDensityEstimation object.
+        data: array-like, shape (n_samples, n_features)
+               points of the data define each kernel position
+               each row is a point, each column is a parameter.
+        kwargs:
+            bandwidth : The bandwidth of the kernel used for smoothing. Default is 1.0
+            dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff') 
+                        values must be strings
+        """
+        if len(data.shape) != 2:
+            raise ValueError("data must have shape (n_samples, n_features).")
+
+        self.data = np.asarray(data) 
+        self.bandwidth = bandwidth
+        self.dim_names = dim_names
+
+        if dim_names is not None:
+            self.check_dimensionality()
+
+    def check_dimensionality(self):
+        """
+        Check if the dimension of training data matches the number of parameter names.
+        """
+        if len(self.data.shape[0]) != len(self.dim_names):
+            raise ValueError("Dimensionality of data array does not match the number of dimension names.")
+
+    def evaluate(self, points):
+        """
+        Evaluate the KDE at given data points.
+
+        Parameters:
+        -----------
+        points : array-like
+            The data points at which the KDE will be evaluated.
+
+        Returns:
+        --------
+        density_values : array-like
+            The estimated density values at the given data points.
+            using standard gaussian distribution
+        """
+        from scipy.stats import gaussian_kde 
+
+        # scipy takes data with shape (n_dimensions, n_samples)
+        kernel_function = gaussian_kde(self.data.T, bw_method=self.bandwidth)
+        points = np.asarray(points).T
+        density_values = kernel_function(points)
+
+        return density_values
+
+
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
     A class that given input values of observations and a choice of
