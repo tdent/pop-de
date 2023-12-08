@@ -148,4 +148,4 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         self.optbw, self.optalpha = optvalues[0], optvalues[1]
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
-    return kdeval, self.optbw, self.optalpha 
+        return kdeval, self.optbw, self.optalpha 
