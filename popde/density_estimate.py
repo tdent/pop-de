@@ -14,7 +14,6 @@ class SimpleKernelDensityEstimation:
     """
     def __init__(self, data, backend='scipy', bandwidth=1., dim_names=None):
         """
-        Initialize the KernelDensityEstimation object.
         data: array-like, shape (n_samples, n_features)
                points of the data define each kernel position
                each row is a point, each column is a parameter.
@@ -24,7 +23,7 @@ class SimpleKernelDensityEstimation:
                         values must be strings
         """
         if len(data.shape) != 2:
-            raise ValueError("data must have shape (n_samples, n_features).")
+            raise ValueError("Data must have shape (n_samples, n_features).")
 
         self.data = np.asarray(data)
         self.backend = backend
@@ -39,7 +38,7 @@ class SimpleKernelDensityEstimation:
 
     def check_dimensionality(self):
         """
-        Check if the dimension of training data matches the number of parameter names.
+        Check if the dimension of training data matches the number of param names
         """
         if self.data.shape[1] != len(self.dim_names):
             raise ValueError("Dimensionality of data array does not match "
@@ -47,7 +46,7 @@ class SimpleKernelDensityEstimation:
 
     def fit(self):
         """
-        General fit method allowing for different backends.
+        General fit method allowing for different backends
         """
         fit_method = getattr(self, 'fit_' + self.backend)
         fit_method()
@@ -67,18 +66,18 @@ class SimpleKernelDensityEstimation:
 
     def evaluate(self, points):
         """
-        Evaluate the KDE allowing for different backends.
+        Evaluate the KDE allowing for different backends
 
         Parameters:
         -----------
         points : array-like
-            The data points at which the KDE will be evaluated.
+            The parameter points at which the KDE will be evaluated
 
         Returns:
         --------
         density_values : array-like
-            The estimated density values at the given data points.
-            using standard gaussian distribution
+            The estimated density values at the given points
+            using a standard gaussian kernel
         """
         evaluate_method = getattr(self, 'evaluate_' + self.backend)
         return evaluate_method(points)
@@ -108,7 +107,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         Evaluate the KDE at given data points.
     """
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None):
-        # Same initialization but default to KDEpy
+        # Same initialization as parent class but default to KDEpy
         super().__init__(data, backend, bandwidth, dim_names)
 
     def fit_KDEpy(self):
