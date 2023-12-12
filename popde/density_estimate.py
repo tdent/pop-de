@@ -48,8 +48,8 @@ class SimpleKernelDensityEstimation:
         >>> c = plt.pcolormesh(bx, by, ZZ, cmap="Blues", norm=LogNorm(), shading='flat')
         >>> plt.colorbar(c)
         >>> plt.scatter(sample1, sample2, s=2, marker='+', c='white')
-        >>> plt.xlabel(dim_name[0])
-        >>> plt.ylabel(dim_name[1])
+        >>> plt.xlabel('m1')
+        >>> plt.ylabel('m2')
         >>> plt.show()
         """
         if len(data.shape) != 2:
