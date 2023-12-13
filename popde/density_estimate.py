@@ -18,9 +18,41 @@ class SimpleKernelDensityEstimation:
                points of the data define each kernel position
                each row is a point, each column is a parameter.
         kwargs:
-            bandwidth : The bandwidth of the kernel used for smoothing
+           bandwidth : The bandwidth of the kernel used for smoothing
             dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
                         values must be strings
+        Example:
+        --------
+
+          #For two dimensional case
+          rndgen = np.random.RandomState(seed=3575)
+          mean1, sigma1 = 3.0, .25
+          mean2, sigma2 = 14.0, 1.5
+          n_samples = 1000
+          sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
+          sample2 = rndgen.normal(mean2, sigma2, size=n_samples
+          sample = np.vstack((sample1, sample2)).T #shape of data (n_points, n_features)
+          kde = SimpleKernelDensityEstimation(sample, dim_names=['mass1', 'mass2'])
+          minx, maxx = np.amin(sample[:, 0]), np.amax(sample[:, 0])
+          miny, maxy = np.amin(sample[:, 1]), np.amax(sample[:, 1])
+          x = np.linspace(minx, maxx, 100)
+          y = np.linspace(miny, maxy, 100)
+          XX, YY = np.meshgrid(x, y)
+          eval_pts = np.array(list(map(np.ravel, [XX, YY]))).T
+          dx2, dy2 = (x[1] - x[0]) / 2., (y[1] - y[0]) / 2.
+          bx = np.concatenate((x - dx2, [x[-1] + dx2]))
+          by = np.concatenate((y - dy2, [y[-1] + dy2]))
+          zz = kde.evaluate(grid_pts)
+          ZZ = zz.reshape(XX.shape)
+          import matplotlib.pyplot as plt
+          from matplotlib.colors import LogNorm
+          plt.figure()
+          c = plt.pcolormesh(bx, by, ZZ, cmap="Blues", norm=LogNorm(), shading='flat')
+          plt.colorbar(c)
+          plt.scatter(sample1, sample2, s=2, marker='+', c='white')
+          plt.xlabel('m1')
+          plt.ylabel('m2')
+          plt.show()
         """
         if len(data.shape) != 2:
             raise ValueError("Data must have shape (n_samples, n_features).")
