@@ -30,24 +30,20 @@ class SimpleKernelDensityEstimation:
           mean2, sigma2 = 14.0, 1.5
           n_samples = 1000
           sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
-          sample2 = rndgen.normal(mean2, sigma2, size=n_samples
-          sample = np.vstack((sample1, sample2)).T #shape of data (n_points, n_features)
+          sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
+          sample = np.column_stack((sample1, sample2)) #shape of data (n_points, n_features)
           kde = SimpleKernelDensityEstimation(sample, dim_names=['mass1', 'mass2'])
           minx, maxx = np.amin(sample[:, 0]), np.amax(sample[:, 0])
           miny, maxy = np.amin(sample[:, 1]), np.amax(sample[:, 1])
           x = np.linspace(minx, maxx, 100)
           y = np.linspace(miny, maxy, 100)
           XX, YY = np.meshgrid(x, y)
-          eval_pts = np.array(list(map(np.ravel, [XX, YY]))).T
-          dx2, dy2 = (x[1] - x[0]) / 2., (y[1] - y[0]) / 2.
-          bx = np.concatenate((x - dx2, [x[-1] + dx2]))
-          by = np.concatenate((y - dy2, [y[-1] + dy2]))
+          eval_pts = np.column_stack((XX.reshape(-1), YY.reshape(-1)))
           zz = kde.evaluate(grid_pts)
           ZZ = zz.reshape(XX.shape)
           import matplotlib.pyplot as plt
           from matplotlib.colors import LogNorm
-          plt.figure()
-          c = plt.pcolormesh(bx, by, ZZ, cmap="Blues", norm=LogNorm(), shading='flat')
+          c = plt.pcolormesh(XX, YY, ZZ, cmap="Blues", norm=LogNorm(), shading='flat')
           plt.colorbar(c)
           plt.scatter(sample1, sample2, s=2, marker='+', c='white')
           plt.xlabel('m1')
