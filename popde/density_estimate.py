@@ -40,7 +40,8 @@ class SimpleKernelDensityEstimation:
         ZZ = zz.reshape(XX.shape)
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
-        c = plt.pcolormesh(XX, YY, ZZ, cmap="Blues", norm=LogNorm(), shading='nearest')
+        # Older mpl versions may require shading='flat'
+        c = plt.pcolormesh(XX, YY, ZZ, cmap='Blues', norm=LogNorm(), shading='nearest')
         plt.colorbar(c)
         plt.scatter(sample1, sample2, s=2, marker='+', c='white')
         plt.xlabel(kde.dim_names[0])
