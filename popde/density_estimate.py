@@ -24,8 +24,8 @@ class SimpleKernelDensityEstimation:
         Example
         --------
         # Two dimensional case
-        mean1, sigma1 = 3.0, .25
-        mean2, sigma2 = 14.0, 1.5
+        mean1, sigma1 = 14.0, 1.5
+        mean2, sigma2 = 3.0, 0.25
         n_samples = 1000
         rndgen = np.random.RandomState(seed=1)
         sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
@@ -40,11 +40,11 @@ class SimpleKernelDensityEstimation:
         ZZ = zz.reshape(XX.shape)
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
-        c = plt.pcolormesh(XX, YY, ZZ, cmap="Blues", norm=LogNorm(), shading='flat')
+        c = plt.pcolormesh(XX, YY, ZZ, cmap="Blues", norm=LogNorm(), shading='nearest')
         plt.colorbar(c)
         plt.scatter(sample1, sample2, s=2, marker='+', c='white')
-        plt.xlabel(dim_names[0])
-        plt.ylabel(dim_names[1])
+        plt.xlabel(kde.dim_names[0])
+        plt.ylabel(kde.dim_names[1])
         """
         if len(data.shape) != 2:
             raise ValueError("Data must have shape (n_samples, n_features).")
