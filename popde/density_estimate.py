@@ -15,12 +15,37 @@ class SimpleKernelDensityEstimation:
     def __init__(self, data, backend='scipy', bandwidth=1., dim_names=None):
         """
         data: array-like, shape (n_samples, n_features)
-               points of the data define each kernel position
-               each row is a point, each column is a parameter.
+            points of the data define each kernel position
+            each row is a point, each column is a parameter.
         kwargs:
             bandwidth : The bandwidth of the kernel used for smoothing
             dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
                         values must be strings
+        Example
+        --------
+        # Two dimensional case
+        mean1, sigma1 = 14.0, 1.5
+        mean2, sigma2 = 3.0, 0.25
+        n_samples = 1000
+        rndgen = np.random.RandomState(seed=1)
+        sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
+        sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
+        sample = np.column_stack((sample1, sample2)) # shape is (n_points, n_features)
+        kde = SimpleKernelDensityEstimation(sample, dim_names=['mass1', 'mass2'])
+        xgrid = np.linspace(sample1.min(), sample1.max(), 100)
+        ygrid = np.linspace(sample2.min(), sample2.max(), 100)
+        XX, YY = np.meshgrid(xgrid, ygrid)
+        eval_pts = np.column_stack((XX.flatten(), YY.flatten()))
+        zz = kde.evaluate(eval_pts)
+        ZZ = zz.reshape(XX.shape)
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
+        # Older mpl versions may require shading='flat'
+        c = plt.pcolormesh(XX, YY, ZZ, cmap='Blues', norm=LogNorm(), shading='nearest')
+        plt.colorbar(c)
+        plt.scatter(sample1, sample2, s=2, marker='+', c='white')
+        plt.xlabel(kde.dim_names[0])
+        plt.ylabel(kde.dim_names[1])
         """
         if len(data.shape) != 2:
             raise ValueError("Data must have shape (n_samples, n_features).")
