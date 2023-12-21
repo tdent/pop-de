@@ -92,6 +92,48 @@ class SimpleKernelDensityEstimation:
 
         return density_values
 
+    def plot(self, plot_function, labels=None, use_log=False, **plot_kwargs):
+        """
+        Compute KDE values and call an external plotting function
+        from plotting module.
+
+        Parameters:
+        -----------
+        plot_function : function
+            External plotting function that takes information about
+            density_values, grid, labels, and other optional plot_kwargs
+            from this method and make plots
+        labels : list, optional
+            Labels for each dimension. If not provided, default labels will be used.
+        use_log : bool, optional
+            Whether to use log scale for the density values.
+        plot_kwargs : dict, optional
+            Additional keyword arguments to pass to the external plotting function.
+
+        Returns:
+        --------
+        plots and 0
+        """
+
+        if labels is None:
+            labels = [f'Dimension {i+1}' for i in range(self.data.shape[1])]
+        n_samples = 1000
+        sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
+        sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
+        sample = np.column_stack((sample1, sample2)) #shape of data (n_points, n_features)
+        kde = SimpleKernelDensityEstimation(sample, dim_names=['mass1', 'mass2'])
+
+        grid = np.meshgrid(*[np.linspace(np.min(dim), np.max(dim), 100) for dim in self.data.T])
+        points = np.vstack([grid[i].ravel() for i in range(len(grid))]).T
+        density_values = self.evaluate(points).reshape(grid[0].shape)
+
+        if use_log:
+            density_values = density_values*np.exp(grid)#need to fix this
+
+        plot_function(grid, density_values, labels=labels, **plot_kwargs)
+        return 0
+
+
 
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
     """
@@ -207,3 +249,5 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return kdeval, self.optbw, self.optalpha
+
+
