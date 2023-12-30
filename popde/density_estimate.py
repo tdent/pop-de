@@ -134,7 +134,6 @@ class SimpleKernelDensityEstimation:
         return 0
 
 
-
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
