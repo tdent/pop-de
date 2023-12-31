@@ -2,27 +2,58 @@ import numpy as np
 
 
 def apply_transf(column, fnc):
-    if fnc == 'log':
+    """
+    Apply a named transformation to a single array
+
+    'log' or 'ln' : take log of data
+    'stdize' : 
+    fnc convertible to float : multiply by constant
+    """
+    if fnc in ['log', 'ln']:
         return np.log(column)
+    elif fnd == 'exp':
+        return np.exp(column)
     elif fnc == 'stdize':
         return column / np.std(column)
     else:
-        try:  # Allow for a float or string that can be converted to float
-            fac = float(fnc)
-            return column * fac
+        try:  # Convert possible string to float
+            return column * float(fnc)
         except:
-            raise ValueError(f'I got an unknown transformation function {fnc} !')      
+            raise ValueError(f'I got an unknown transformation function {fnc} !') 
 
 
 def transform_data(data, transf):
+    """
+    Cycle over data dimensions applying a named transformation to each 
+    """
+    assert len(data.shape) = 2  # only works for 'tabular' data
+    assert len(transf) = data.shape[1]
     transf_data = np.zeros_like(data)
     for (col, fnc) in zip(data.T, transf):  # iterate over columns
         if fnc in ('None', 'none'):  # no-op
-             transf_data[:, dim] = data[:, dim]
+             transf_data[:, dim] = col
         else:
-             transf_data[:, dim] = apply_transf(data[:, dim], fnc)
+             transf_data[:, dim] = apply_transf(col, fnc)
 
     return transf_data
+
+
+def reverse_transform(data, transf, stds, rescale):
+    """
+    Reverse the input process: rescale, de-standardize, transform
+    """
+    invdict = {'log': 'exp',
+               'ln': 'exp',
+               'exp': 'log'
+               }
+    assert len(data.shape) = 2  # only works for 'tabular' data
+    if rescale is not None:
+        data = transform_data(data, 1. / np.array(rescale))
+    if stds is not None:  # restore original variances
+        data = transform_data(data, np.array(stds))
+    inv_transf = [invdict[t] if t in invdict else t
+                  for t in transf]
+    return transform_data(data, inv_transf)
 
 
 class SimpleKernelDensityEstimation:
@@ -130,9 +161,11 @@ class SimpleKernelDensityEstimation:
 
         if self.stdize:
             std_transf = ['stdize' for dim in self.ndim]
-            self.std_data = transform_data(self.transf_data, std_transf)
+            self.stds = numpy.std(self.transf_data, axis=0)  # record the stds
+            self.std_data, self.stds = transform_data(self.transf_data, std_transf)
         else:
-            self.std_data = self.transf_data        
+            self.stds = None
+            self.std_data = self.transf_data
 
         if self.rescale is not None:
             self.kde_data = transform_data(self.std_data, self.rescale)
@@ -217,7 +250,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         density_values = self.kernel_estimate.evaluate(points)
 
         return density_values
-       
+ 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
