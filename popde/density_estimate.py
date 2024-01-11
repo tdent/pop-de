@@ -92,46 +92,53 @@ class SimpleKernelDensityEstimation:
 
         return density_values
 
-    def plot(self, plot_function, labels=None, use_log=False, **plot_kwargs):
+
+    def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, num_points=100, **kwargs):
         """
-        Compute KDE values and call an external plotting function
-        from plotting module.
+        Plot a 2D contour of the KDE with optional slicing along other dimensions.
 
         Parameters:
-        -----------
-        plot_function : function
-            External plotting function that takes information about
-            density_values, grid, labels, and other optional plot_kwargs
-            from this method and make plots
-        labels : list, optional
-            Labels for each dimension. If not provided, default labels will be used.
-        use_log : bool, optional
-            Whether to use log scale for the density values.
-        plot_kwargs : dict, optional
-            Additional keyword arguments to pass to the external plotting function.
+            - dim1, dim2: Dimensions for the plot axes.
+            - slice_dims: Dimensions to slice along (list or tuple).
+            - slice_values: Values for slicing along slice_dims (list or tuple).
+            - num_points: Number of points for the contour plot.
+            - **kwargs: Additional keyword arguments passed to the `contour` function.
+        Example:
+            import pandas as pd
+            data = pd.DataFrame(np.random.multivariate_normal(mean=[0, 0, 0], cov=np.eye(3), size=1000), columns=['x', 'y', 'z'])
+            kde = (data)
 
-        Returns:
-        --------
-        plots and 0
+            # Plot a 2D contour with a slice along the 'z' dimension
+            kde.plot_2d_contour('x', 'y', slice_dims=['z'], slice_values=[0], num_points=100, colors='blue', alpha=0.5)
+
         """
+        # Generate a grid for the contour plot
+        dim1_min, dim1_max = np.min(self.data[dim1]), np.max(self.data[dim1])
+        dim2_min, dim2_max = np.min(self.data[dim2]), np.max(self.data[dim2])
+        dim1_grid = np.linspace(dim1_min, dim1_max, num_points)
+        dim2_grid = np.linspace(dim2_min, dim2_max, num_points)
+        xx, yy = np.meshgrid(dim1_grid, dim2_grid)
+        positions = np.column_stack([xx.ravel(), yy.ravel()])
 
-        if labels is None:
-            labels = [f'Dimension {i+1}' for i in range(self.data.shape[1])]
-        n_samples = 1000
-        sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
-        sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
-        sample = np.column_stack((sample1, sample2)) #shape of data (n_points, n_features)
-        kde = SimpleKernelDensityEstimation(sample, dim_names=['mass1', 'mass2'])
+        # If slicing is specified, insert the slice values into the positions array
+        if slice_dims is not None and slice_values is not None:
+            for slice_dim, slice_value in zip(slice_dims, slice_values):
+                slice_idx = list(self.data.columns).index(slice_dim)
+                positions = np.insert(positions, slice_idx, slice_value, axis=0)
 
-        grid = np.meshgrid(*[np.linspace(np.min(dim), np.max(dim), 100) for dim in self.data.T])
-        points = np.vstack([grid[i].ravel() for i in range(len(grid))]).T
-        density_values = self.evaluate(points).reshape(grid[0].shape)
+        # Evaluate the KDE at the grid points need fix here
+        z = self.kde(positions)
 
-        if use_log:
-            density_values = density_values*np.exp(grid)#need to fix this
+        # Reshape the results for contour plotting
+        zz = z.reshape(xx.shape)
 
-        plot_function(grid, density_values, labels=labels, **plot_kwargs)
-        return 0
+        # Create the contour plot
+        plt.contour(xx, yy, zz, **kwargs)
+        plt.xlabel(dim1)
+        plt.ylabel(dim2)
+        plt.title(f'2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
+        plt.show()
+
 
 
 
