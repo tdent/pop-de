@@ -15,8 +15,8 @@ class Generic_Adaptive_KDEpy(FFTKDE):
 
     Parameters:
     - data (array-like): The input data for KDE computation.
-    - bw_scaler (float, optional): Scaling factor for bandwidths. Default is 0.5.
-
+    - bandwidth (float, optional): Scaling factor for bandwidths. Default is 0.5.
+    - kernel: gaussian but can be from['biweight', 'box', 'cosine', 'epa', 'exponential', 'tri', 'tricube', 'triweight'] 
     Examples:
     >>> data = np.random.normal(size=1000)
     >>> adaptive_kde = Generic_Adaptive_KDEpy(data)
@@ -24,10 +24,10 @@ class Generic_Adaptive_KDEpy(FFTKDE):
     >>> kde_values = adaptive_kde.evaluate(evaluation_points)
     >>> print(kde_values)
     """
-    def __init__(self, data, bw_scaler=0.5):
-        super().__init__(data)
-        self.bw_scaler = bw_scaler
-        self.pilot_kde = FFTKDE(data)  # You can use any initial KDE method here
+    def __init__(self, data, bandwidth=0.5, kernel='gaussian', dim_names=None):
+        super().__init__(data, kernel=kernel)
+        self.bandwidth = bandwidth
+        self.pilot_kde = FFTKDE(data, kernel=kernel)  #can use any initial KDEpy method
 
     def _calculate_bandwidths(self):
         pilot_values = self.pilot_kde.evaluate(self.data)
@@ -43,4 +43,22 @@ class Generic_Adaptive_KDEpy(FFTKDE):
     def evaluate(self, points):
         per_point_bandwidths = self._calculate_bandwidths()
         return super().evaluate(points, bandwidths=per_point_bandwidths)
+
+
+# main_script.py
+
+# Your data
+data = np.random.normal(size=1000)
+
+# Create an instance of AdaptiveKDE
+adaptive_kde = Generic_Adaptive_KDEpy(data)
+
+# Evaluate the KDE at some points
+evaluation_points = np.linspace(-3, 3, 100)
+kde_values = adaptive_kde.evaluate(evaluation_points)
+import matplotlib.pyplot as plt
+plt.plot(evaluation_points, kde_values)
+plt.show()
+# Do whatever you need with the KDE values
+print(kde_values)
 
