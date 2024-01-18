@@ -104,12 +104,24 @@ class SimpleKernelDensityEstimation:
             - num_points: Number of points for the contour plot.
             - **kwargs: Additional keyword arguments passed to the `contour` function.
         Example:
-            import pandas as pd
-            data = pd.DataFrame(np.random.multivariate_normal(mean=[0, 0, 0], cov=np.eye(3), size=1000), columns=['x', 'y', 'z'])
+            np.random.seed(42)
+            # Number of data points
+            num_points = 1000
+            # Mean and covariance matrix
+            mean = [0, 0, 0]
+            covariance_matrix = [[1, 0.5, 0.3],
+                                [0.5, 1, 0.2],
+                                [0.3, 0.2, 1]]
+
+            # Generate 3D normal distributed data
+            data = np.random.multivariate_normal(mean, covariance_matrix, num_points)
+            parameter = ['m1', 'm2', 'Mc']
+            # Extract individual variables
+            x, y, z = data[:, 0], data[:, 1], data[:, 2]
             kde = (data)
 
             # Plot a 2D contour with a slice along the 'z' dimension
-            kde.plot_2d_contour('x', 'y', slice_dims=['z'], slice_values=[0], num_points=100, colors='blue', alpha=0.5)
+            kde.plot_2d_contour(parameter[0], parameter[1], slice_dims=[parameter[2]], slice_values=[0], num_points=100, colors='blue', alpha=0.5)
 
         """
         # Generate a grid for the contour plot
@@ -137,6 +149,7 @@ class SimpleKernelDensityEstimation:
         plt.xlabel(dim1)
         plt.ylabel(dim2)
         plt.title(f'2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
+        plt.savefig("KDE"+dim1+dim2+"_contour.png")
         plt.show()
 
 
