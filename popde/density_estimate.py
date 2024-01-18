@@ -1,4 +1,5 @@
 import numpy as np
+import transform_utils as transf
 
 
 class SimpleKernelDensityEstimation:
@@ -60,7 +61,7 @@ class SimpleKernelDensityEstimation:
         self.ndim = self.data.shape[1]
 
         self.data = np.asarray(data)
-        self.transf = transf
+        self.input_transf = input_transf
         self.stdize = stdize
         self.rescale = rescale
 
@@ -86,8 +87,8 @@ class SimpleKernelDensityEstimation:
             if len(self.dim_names) != self.ndim:
                 raise ValueError("Dimensionality of data array does not match "
                                  "the number of dimension names.")
-        if self.transf is not None:
-            if len(self.transf) != self.ndim:
+        if self.input_transf is not None:
+            if len(self.input_transf) != self.ndim:
                 raise ValueError("Dimensionality of data array does not match "
                                  "the number of transformation strings.")
         if self.rescale is not None:
@@ -99,21 +100,21 @@ class SimpleKernelDensityEstimation:
         """
         Transform, standardize and rescale input data into KDE-ready data
         """
-        if self.transf is not None:
-            self.transf_data = transform_data(self.data, self.transf)
+        if self.input_transf is not None:
+            self.transf_data = transf.transform_data(self.data, self.input_transf)
         else:
             self.transf_data = self.data
 
         if self.stdize:
             std_transf = ['stdize' for dim in self.ndim]
-            self.stds = numpy.std(self.transf_data, axis=0)  # record the stds
-            self.std_data, self.stds = transform_data(self.transf_data, std_transf)
+            self.stds = np.std(self.transf_data, axis=0)  # record the stds
+            self.std_data = transf.transform_data(self.transf_data, std_transf)
         else:
             self.stds = None
             self.std_data = self.transf_data
 
         if self.rescale is not None:
-            self.kde_data = transform_data(self.std_data, self.rescale)
+            self.kde_data = transf.transform_data(self.std_data, self.rescale)
         else:
             self.kde_data = self.std_data
 

@@ -13,7 +13,7 @@ def apply_transf(column, fnc):
     column = np.asarray(column)
     if fnc in ['log', 'ln']:
         return np.log(column)
-    elif fnd == 'exp':
+    elif fnc == 'exp':
         return np.exp(column)
     elif fnc == 'stdize':
         return column / np.std(column)
@@ -31,7 +31,7 @@ def transform_data(data, transf):
     assert len(data.shape) == 2  # only works for 'tabular' data
     assert len(transf) == data.shape[1]
     transf_data = np.zeros_like(data)
-    for (col, fnc) in zip(data.T, transf):  # iterate over columns
+    for dim, (col, fnc) in enumerate(zip(data.T, transf)):  # iterate over columns
         if fnc in ('None', 'none'):  # no-op
              transf_data[:, dim] = col
         else:
