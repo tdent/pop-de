@@ -154,7 +154,6 @@ class SimpleKernelDensityEstimation:
 
 
 
-
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
@@ -269,5 +268,3 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return kdeval, self.optbw, self.optalpha
-
-
