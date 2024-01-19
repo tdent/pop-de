@@ -1,8 +1,3 @@
-### write a generic kde as described:
-#Add a class in a new module, as a subclass of the KDEpy basic estimate, to implement a general adaptive KDE. It will evaluate an initial 'pilot' KDE (with fixed scalar bandwidth) at the data point positions. It will then calculate per-point bandwidths via some formula based on the pilot KDE values (eg the Wang & Wang formula at https://github.com/mennthor/awkde/tree/master). Its main evaluation method will use the per-point bandwidths.
-
-
-# adaptive_kde.py
 from KDEpy import FFTKDE
 import numpy as np
 
@@ -27,7 +22,7 @@ class Generic_Adaptive_KDEpy(FFTKDE):
     def __init__(self, data, bandwidth=0.5, kernel='gaussian', dim_names=None):
         super().__init__(data, kernel=kernel)
         self.bandwidth = bandwidth
-        self.pilot_kde = FFTKDE(data, kernel=kernel)  #can use any initial KDEpy method
+        self.pilot_kde = FFTKDE(bw=self.bandwidth, kernel=kernel).fit(data).evaluate()  #can use any initial KDEpy method
 
     def _calculate_bandwidths(self):
         pilot_values = self.pilot_kde.evaluate(self.data)
@@ -36,7 +31,7 @@ class Generic_Adaptive_KDEpy(FFTKDE):
 
     def _calculate_per_point_bandwidths(self, pilot_values):
         # Implement the formula to calculate per-point bandwidths
-        # You can replace this with the actual formula from the Wang & Wang reference
+        #
         per_point_bandwidths = np.sqrt(pilot_values) * self.bw_scaler
         return per_point_bandwidths
 
