@@ -144,10 +144,8 @@ grid_points = np.array(np.meshgrid(x_grid, y_grid, z_grid)).T.reshape(-1, 3)
 
 # Evaluate the adaptive KDE at the grid points
 density_values = adaptive_kde.evaluate(grid_points)
-
 # Reshape the density values for plotting
 density_grid = density_values.reshape((grid_size, grid_size, grid_size))
-
 # Plot the 3D KDE
 fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(111, projection='3d')
