@@ -21,7 +21,6 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     # Create and fit the adaptive KDE
     kde = General_adaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
     print("kde=", kde)
-    #kde.fit()
     
     # Generate grid for plotting
     xgrid = np.linspace(sample1.min(), sample1.max(), 100)
@@ -29,7 +28,7 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     zgrid = np.linspace(sample3.min(), sample3.max(), 100)
     XX, YY, ZZ = np.meshgrid(xgrid, ygrid, zgrid)
     eval_pts = np.column_stack((XX.flatten(), YY.flatten(), ZZ.flatten()))
-    kde.This_fit(eval_pts)
+    kde.fit(eval_pts)
 
     # Evaluate the KDE at the grid points
     density_values = kde.evaluate(eval_pts)
@@ -90,7 +89,7 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
 
         return per_point_bandwidths
 
-    def This_fit(self, points):
+    def fit(self, points):
         """
         Fit the adaptive KDE
         """
