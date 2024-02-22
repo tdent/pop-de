@@ -2,7 +2,7 @@ import numpy as np
 from density_estimate import SimpleKernelDensityEstimation
 from KDEpy.TreeKDE import TreeKDE
 
-class General_adaptiveKDE(SimpleKernelDensityEstimation):
+class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
@@ -10,8 +10,10 @@ class General_adaptiveKDE(SimpleKernelDensityEstimation):
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
         # Additional parameter for the Wang & Wang formula
         self.alpha = alpha
-        super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names)  
+        self.bandwidth = bandwidth
+        self.kde_data = data
+        #super().__init__(data, input_transf, stdize, rescale,
+        #                 backend, bandwidth, dim_names)  
 
     def _calc_local_bandwidth(self, kde_values):
         """
@@ -59,15 +61,14 @@ class General_adaptiveKDE(SimpleKernelDensityEstimation):
 
         return per_point_bandwidths
 
-    def fit(self, points):
+    def This_fit(self, points):
         """
         Fit the adaptive KDE
         """
         from KDEpy.TreeKDE import TreeKDE
         #First get pilot KDE
-        # Bandwidth may be array-like with size n_samples
         pilot_kde = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
-        pilot_values = self.kernel_estimate.evaluate(points)
+        pilot_values = pilot_kde.evaluate(points)
         # Calculate per-point bandwidths
         per_point_bandwidths = self.calculate_per_point_bandwidths(pilot_values)
 
@@ -90,7 +91,7 @@ sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
 sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
 # Create and fit the adaptive KDE
 kde = General_adaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
-
+print("kde=", kde)
 #kde.fit()
 
 # Generate grid for plotting
@@ -99,7 +100,7 @@ ygrid = np.linspace(sample2.min(), sample2.max(), 100)
 zgrid = np.linspace(sample3.min(), sample3.max(), 100)
 XX, YY, ZZ = np.meshgrid(xgrid, ygrid, zgrid)
 eval_pts = np.column_stack((XX.flatten(), YY.flatten(), ZZ.flatten()))
-kde.fit(eval_pts)
+kde.This_fit(eval_pts)
 
 # Evaluate the KDE at the grid points
 density_values = kde.evaluate(eval_pts)
