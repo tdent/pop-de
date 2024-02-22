@@ -6,6 +6,35 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
+
+    Example:
+    # Example of 3D KDE and plot for verification
+    mean1, sigma1 = 0.0, 1.0
+    mean2, sigma2 = 0.0, 1.0
+    mean3, sigma3 = 0.0, 1.0
+    n_samples = 1000
+    rndgen = np.random.RandomState(seed=1)
+    sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
+    sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
+    sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
+    sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
+    # Create and fit the adaptive KDE
+    kde = General_adaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
+    print("kde=", kde)
+    #kde.fit()
+    
+    # Generate grid for plotting
+    xgrid = np.linspace(sample1.min(), sample1.max(), 100)
+    ygrid = np.linspace(sample2.min(), sample2.max(), 100)
+    zgrid = np.linspace(sample3.min(), sample3.max(), 100)
+    XX, YY, ZZ = np.meshgrid(xgrid, ygrid, zgrid)
+    eval_pts = np.column_stack((XX.flatten(), YY.flatten(), ZZ.flatten()))
+    kde.This_fit(eval_pts)
+
+    # Evaluate the KDE at the grid points
+    density_values = kde.evaluate(eval_pts)
+    density_values = density_values.reshape(XX.shape)
+    print(density_values)
     """
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
         # Additional parameter for the Wang & Wang formula
@@ -79,42 +108,4 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     def evaluate(self, points):
         density_values = self.kernel_estimate.evaluate(points)
         return density_values
-# Example of 3D KDE and plot for verification
-mean1, sigma1 = 0.0, 1.0
-mean2, sigma2 = 0.0, 1.0
-mean3, sigma3 = 0.0, 1.0
-n_samples = 1000
-rndgen = np.random.RandomState(seed=1)
-sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
-sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
-sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
-sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
-# Create and fit the adaptive KDE
-kde = General_adaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
-print("kde=", kde)
-#kde.fit()
-
-# Generate grid for plotting
-xgrid = np.linspace(sample1.min(), sample1.max(), 100)
-ygrid = np.linspace(sample2.min(), sample2.max(), 100)
-zgrid = np.linspace(sample3.min(), sample3.max(), 100)
-XX, YY, ZZ = np.meshgrid(xgrid, ygrid, zgrid)
-eval_pts = np.column_stack((XX.flatten(), YY.flatten(), ZZ.flatten()))
-kde.This_fit(eval_pts)
-
-# Evaluate the KDE at the grid points
-density_values = kde.evaluate(eval_pts)
-density_values = density_values.reshape(XX.shape)
-
-# Plot the 3D KDE
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(sample1, sample2, sample3, s=2, marker='+', c='white')
-ax.plot_surface(XX, YY, density_values, cmap='Blues', alpha=0.7)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('z')
-plt.show()
 
