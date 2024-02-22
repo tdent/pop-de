@@ -10,9 +10,8 @@ class General_adaptiveKDE(SimpleKernelDensityEstimation):
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
         # Additional parameter for the Wang & Wang formula
         self.alpha = alpha
-        self.backend = backend
-        self.bandwidth= bandwidth
-        super().__init__(data, dim_names) 
+        super().__init__(data, input_transf, stdize, rescale,
+                         backend, bandwidth, dim_names)  
 
     def _calc_local_bandwidth(self, kde_values):
         """
@@ -90,7 +89,7 @@ sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
 sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
 sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
 # Create and fit the adaptive KDE
-kde = AdaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
+kde = General_adaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
 
 #kde.fit()
 
