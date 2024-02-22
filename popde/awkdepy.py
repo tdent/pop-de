@@ -2,7 +2,7 @@ import numpy as np
 from density_estimate import SimpleKernelDensityEstimation
 from KDEpy.TreeKDE import TreeKDE
 
-class General_adaptiveKDE():#SimpleKernelDensityEstimation):
+class General_adaptiveKDE(SimpleKernelDensityEstimation):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
@@ -18,8 +18,8 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
     sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
     sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
-    # Create and fit the adaptive KDE
-    kde = General_adaptiveKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
+    # Create and fit the adaptive KDE note backend must be set correctly
+    kde = General_adaptiveKDE(sample, backend='awKDEpy', dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
     print("kde=", kde)
     
     # Generate grid for plotting
@@ -38,10 +38,10 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
         # Additional parameter for the Wang & Wang formula
         self.alpha = alpha
-        self.bandwidth = bandwidth
-        self.kde_data = data
-        #super().__init__(data, input_transf, stdize, rescale,
-        #                 backend, bandwidth, dim_names)  
+        #self.bandwidth = bandwidth
+        #self.kde_data = data
+        super().__init__(data, input_transf, stdize, rescale,
+                         backend, bandwidth, dim_names)  
 
     def _calc_local_bandwidth(self, kde_values):
         """
@@ -89,14 +89,14 @@ class General_adaptiveKDE():#SimpleKernelDensityEstimation):
 
         return per_point_bandwidths
 
-    def fit(self, points):
+    def fit_awKDEpy(self):
         """
         Fit the adaptive KDE
         """
         from KDEpy.TreeKDE import TreeKDE
         #First get pilot KDE
         pilot_kde = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
-        pilot_values = pilot_kde.evaluate(points)
+        pilot_values = pilot_kde.evaluate(self.kde_data)
         # Calculate per-point bandwidths
         per_point_bandwidths = self.calculate_per_point_bandwidths(pilot_values)
 
