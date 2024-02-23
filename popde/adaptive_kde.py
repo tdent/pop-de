@@ -2,7 +2,7 @@ import numpy as np
 from density_estimate import SimpleKernelDensityEstimation
 from KDEpy.TreeKDE import TreeKDE
 
-class General_adaptiveKDE(SimpleKernelDensityEstimation):
+class AdaptiveBwKDE(SimpleKernelDensityEstimation):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
@@ -19,7 +19,7 @@ class General_adaptiveKDE(SimpleKernelDensityEstimation):
     sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
     sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
     # Create and fit the adaptive KDE note backend must be set correctly
-    kde = General_adaptiveKDE(sample, backend='awKDEpy', dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
+    kde = AdaptiveBwKDE(sample, backend='awKDEpy', dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
     print("kde=", kde)
     
     # Generate grid for plotting
