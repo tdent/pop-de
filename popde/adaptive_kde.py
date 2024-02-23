@@ -57,7 +57,6 @@ class AdaptiveBwKDE(SimpleKernelDensityEstimation):
         inv_loc_bw : array-like
             Inverse of the local bandwidth calculated using the provided function.
         """
-        print("kdevals = ", kde_values)
         g = np.exp(np.sum(np.log(kde_values)) / len(kde_values))
         inv_loc_bw = (kde_values / g) ** self.alpha
         return inv_loc_bw
