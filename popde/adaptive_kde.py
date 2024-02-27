@@ -1,8 +1,8 @@
 import numpy as np
-from density_estimate import SimpleKernelDensityEstimation
+from density_estimate import VariableBwKDEPy 
 from KDEpy.TreeKDE import TreeKDE
 
-class AdaptiveBwKDE(SimpleKernelDensityEstimation):
+class AdaptiveBwKDE(VariableBwKDEPy):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
@@ -28,7 +28,7 @@ class AdaptiveBwKDE(SimpleKernelDensityEstimation):
     zgrid = np.linspace(sample3.min(), sample3.max(), 100)
     XX, YY, ZZ = np.meshgrid(xgrid, ygrid, zgrid)
     eval_pts = np.column_stack((XX.flatten(), YY.flatten(), ZZ.flatten()))
-    kde.fit(eval_pts)
+    kde.fit()
 
     # Evaluate the KDE at the grid points
     density_values = kde.evaluate(eval_pts)
@@ -38,8 +38,6 @@ class AdaptiveBwKDE(SimpleKernelDensityEstimation):
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
         # Additional parameter for the Wang & Wang formula
         self.alpha = alpha
-        #self.bandwidth = bandwidth
-        #self.kde_data = data
         super().__init__(data, input_transf, stdize, rescale,
                          backend, bandwidth, dim_names)  
 
@@ -92,8 +90,6 @@ class AdaptiveBwKDE(SimpleKernelDensityEstimation):
         """
         Fit the adaptive KDE
         """
-        from KDEpy.TreeKDE import TreeKDE
-        #First get pilot KDE
         pilot_kde = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
         pilot_values = pilot_kde.evaluate(self.kde_data)
         # Calculate per-point bandwidths
