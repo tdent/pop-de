@@ -9,14 +9,12 @@ def simple2Dplot(xx, yy, kde):
     """
     fig = plt.figure()
     ax = fig.gca()
-    # Contourf plot
+    # Filled Contour plot
     cfset = ax.contourf(xx, yy, kdevals, cmap='Blues')
     # Contour plot
     cset = ax.contour(xx, yy, kdevals, colors='k')
-    # Label plot
+    # Contour line labels
     ax.clabel(cset, inline=1, fontsize=10)
-    ax.set_xlabel('Y1')
-    ax.set_ylabel('Y0')
 
-    plt.show()
+    return fig
 
