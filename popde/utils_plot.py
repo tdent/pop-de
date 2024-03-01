@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 
-def simple2Dplot(xx, yy, kde):
+def simple2Dplot(xx, yy, kde, xlabel=None, ylabel=None, title=None):
     """
     return kde plot in 2D given output
     """
@@ -15,7 +15,12 @@ def simple2Dplot(xx, yy, kde):
     cset = ax.contour(xx, yy, kdevals, colors='k')
     # Contour line labels
     ax.clabel(cset, inline=1, fontsize=10)
-
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
     return fig
 
 def get_twoD_grid(data_dim1, data_dim2, num_points=100):
