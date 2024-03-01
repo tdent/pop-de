@@ -85,9 +85,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         local_bandwidths = self._local_bandwidth_factor(pilot_values)
 
         # Use the local bandwidths to calculate per-point bandwidths
-        per_point_bandwidths = self.bandwidth / local_bandwidths
+        self.bandwidth = self.bandwidth / local_bandwidths
 
-        return per_point_bandwidths
 
     def fit_awKDEpy(self):
         """
@@ -95,8 +94,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         """
         pilot_kde = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
         pilot_values = pilot_kde.evaluate(self.kde_data)
-        # Calculate per-point bandwidths
-        per_point_bandwidths = self.calculate_per_point_bandwidths(pilot_values)
+        # Calculate per-point bandwidths as  re-assigning self.bandwidth
+        self.calculate_per_point_bandwidths(pilot_values)
 
         # Update the KDE with per-point bandwidths
         self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
