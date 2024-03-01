@@ -160,18 +160,15 @@ class SimpleKernelDensityEstimation:
                 slice_idx = list(self.data.columns).index(slice_dim)
                 positions = np.insert(positions, slice_idx, slice_value, axis=0)
 
-        # Evaluate the KDE at the grid points need fix here
+        # Evaluate the KDE at the grid points
         z = self.kde(positions)
 
         # Reshape the results for contour plotting
         zz = z.reshape(xx.shape)
 
         # Create the contour plot
-        plt.contour(xx, yy, zz, **kwargs)
-        plt.xlabel(dim1)
-        plt.ylabel(dim2)
-        plt.title(f'2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
-        plt.savefig("KDE"+dim1+dim2+"_contour.png")
+        fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title='2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
+        fig.savefig("KDE"+dim1+dim2+"_contour.png")
         plt.show()
 
 
