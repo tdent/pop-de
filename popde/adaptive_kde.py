@@ -20,8 +20,6 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
     # Create and fit the adaptive KDE note backend must be set correctly
     kde = AdaptiveBwKDE(sample, backend='awKDEpy', dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
-    print("kde=", kde)
-    
     # Generate grid for plotting
     xgrid = np.linspace(sample1.min(), sample1.max(), 100)
     ygrid = np.linspace(sample2.min(), sample2.max(), 100)
