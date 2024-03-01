@@ -40,7 +40,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         super().__init__(data, input_transf, stdize, rescale,
                          backend, bandwidth, dim_names)  
 
-    def _calc_local_bandwidth(self, kde_values):
+    def _inverse_local_bandwidth(self, kde_values):
         """
         Calculate local bandwidth using the provided function.
 
@@ -76,8 +76,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         per_point_bandwidths : array-like
             Per-point bandwidths calculated using the Wang & Wang formula.
         """
-        # Calculate the local bandwidth using the provided function
-        local_bandwidths = self._calc_local_bandwidth(pilot_values)
+        # Calculate the inverse of local bandwidth using the provided function
+        local_bandwidths = self._inverse_local_bandwidth(pilot_values)
 
         # Use the local bandwidths to calculate per-point bandwidths
         if adaptive:
