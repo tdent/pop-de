@@ -62,7 +62,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         loc_bw_factor = (kde_values / g) ** self.alpha
         return loc_bw_factor
 
-    def calculate_per_point_bandwidths(self, pilot_values, adaptive=True):
+    def calculate_per_point_bandwidths(self, pilot_values):
         """
         Calculate per-point bandwidths using the Wang & Wang formula.
 
@@ -70,8 +70,6 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         -----------
         pilot_values : array-like
             The pilot KDE values at the data point positions.
-        adaptive : bool, optional (default=True)
-            If True, use adaptive bandwidth; if False, use fixed bandwidth.
 
         Returns:
         --------
@@ -87,10 +85,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         local_bandwidths = self._local_bandwidth_factor(pilot_values)
 
         # Use the local bandwidths to calculate per-point bandwidths
-        if adaptive:
-            per_point_bandwidths = self.bandwidth * local_bandwidths
-        else:
-            per_point_bandwidths = np.ones_like(local_bandwidths) / self.bandwidth
+        per_point_bandwidths = self.bandwidth * local_bandwidths
 
         return per_point_bandwidths
 
