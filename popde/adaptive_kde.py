@@ -85,7 +85,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         local_bandwidths = self._local_bandwidth_factor(pilot_values)
 
         # Use the local bandwidths to calculate per-point bandwidths
-        per_point_bandwidths = self.bandwidth * local_bandwidths
+        per_point_bandwidths = self.bandwidth / local_bandwidths
 
         return per_point_bandwidths
 
