@@ -1,4 +1,5 @@
 import numpy as np
+import utils_plot as utils_plot
 
 class SimpleKernelDensityEstimation:
     """
@@ -150,11 +151,7 @@ class SimpleKernelDensityEstimation:
 
         """
         # Generate a grid for the contour plot
-        dim1_min, dim1_max = np.min(self.data[dim1]), np.max(self.data[dim1])
-        dim2_min, dim2_max = np.min(self.data[dim2]), np.max(self.data[dim2])
-        dim1_grid = np.linspace(dim1_min, dim1_max, num_points)
-        dim2_grid = np.linspace(dim2_min, dim2_max, num_points)
-        xx, yy = np.meshgrid(dim1_grid, dim2_grid)
+        xx, yy = utils_plot.get_twoD_grid(self.data[dim1], self.data[dim2], num_points=num_points)
         positions = np.column_stack([xx.ravel(), yy.ravel()])
 
         # If slicing is specified, insert the slice values into the positions array
