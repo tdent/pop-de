@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 from density_estimate import VariableBwKDEPy 
 from KDEpy.TreeKDE import TreeKDE
 
@@ -53,7 +54,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         inv_loc_bw : array-like
             Inverse of the local bandwidth calculated using the provided function.
         """
-        g = np.exp(np.sum(np.log(kde_values)) / len(kde_values))
+        from scipy.stats import gmean
+        #geometric mean of kde values
+        g = gmean(kde_values)
         inv_loc_bw = (kde_values / g) ** self.alpha
         return inv_loc_bw
 
