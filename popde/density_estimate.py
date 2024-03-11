@@ -1,5 +1,5 @@
 import numpy as np
-import utils_plot as utils_plot
+import utils_plot 
 
 class SimpleKernelDensityEstimation:
     """
