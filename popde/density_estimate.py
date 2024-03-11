@@ -167,7 +167,6 @@ class SimpleKernelDensityEstimation:
         # Evaluate the KDE at the grid points
         z = self.kde(positions)
 
-        # Reshape the results for contour plotting
         zz = z.reshape(xx.shape)
 
         # Create the contour plot
