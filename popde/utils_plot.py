@@ -23,6 +23,7 @@ def simple2Dplot(xx, yy, kde, xlabel=None, ylabel=None, title=None):
         ax.set_title(title)
     return fig
 
+
 def get_twoD_grid(data_dim1, data_dim2, num_points=100):
     """
     return mesh grid of data 
