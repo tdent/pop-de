@@ -156,7 +156,7 @@ class SimpleKernelDensityEstimation:
 
         #check if slice_dimensions  == dim(KDE) -  2
         if len(slice_dims) != self.data.shape[1] - 2 :
-            raise ValueError("kde must be computed on more than 2 parameters for slicing")
+            raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
 
         # If slicing is specified, insert the slice values into the positions array
         if slice_dims is not None and slice_values is not None:
