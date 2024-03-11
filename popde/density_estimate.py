@@ -159,7 +159,7 @@ class SimpleKernelDensityEstimation:
             raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
 
         # If slicing is specified, insert the slice values into the positions array
-        if slice_dims is not None and slice_values is not None:
+        if slice_values is not None:
             for slice_dim, slice_value in zip(slice_dims, slice_values):
                 slice_idx = list(self.data.columns).index(slice_dim)
                 positions = np.insert(positions, slice_idx, slice_value, axis=0)
