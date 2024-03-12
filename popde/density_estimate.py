@@ -119,7 +119,7 @@ class SimpleKernelDensityEstimation:
         return density_values
 
 
-    def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, file_name=None,num_points=100, **kwargs):
+    def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, file_name=None, num_points=100, **kwargs):
         """
         Plot a 2D contour of the KDE with optional slicing along other dimensions.
 
@@ -165,8 +165,8 @@ class SimpleKernelDensityEstimation:
         # If slicing is specified, insert the slice values into the positions array
         if slice_values is not None:
             for slice_dim, slice_value in zip(slice_dims, slice_values):
-                slice_idx = list(self.data.columns).index(slice_dim)
-                positions = np.insert(positions, slice_idx, slice_value, axis=0)
+                slice_idx = self.dim_names.index(slice_dim)
+                positions = np.insert(positions, slice_idx, slice_value, axis=1)
 
         # Evaluate the KDE at the grid points
         z = self.evaluate_scipy(positions)
@@ -175,7 +175,9 @@ class SimpleKernelDensityEstimation:
 
         # Create the contour plot
         fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title='2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
-        fig.savefig(file_name)
+        if file_name is not None:
+            fig.savefig(file_name)
+        return fig
 
 
 
