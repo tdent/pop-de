@@ -142,13 +142,10 @@ class SimpleKernelDensityEstimation:
             # Generate 3D normal distributed data
             data = np.random.multivariate_normal(mean, covariance_matrix, num_points)
             parameter = ['m1', 'm2', 'Mc']
-            # Extract individual variables
-            x, y, z = data[:, 0], data[:, 1], data[:, 2]
-            kde = (data)
-
-            # Plot a 2D contour with a slice along the 'z' dimension
-            kde.plot_2d_contour(parameter[0], parameter[1], slice_dims=[parameter[2]], slice_values=[0], num_points=100)
-
+            kde = SimpleKernelDensityEstimation(sample,  dim_names=parameter)
+            # Plot a 2D contour with a slice along the 'z' dimensios
+            fig = kde.plot_2d_contour(parameter[0],parameter[1], 
+                    slice_dims=[parameter[2]], slice_values=[0], num_points=100)
         """
         if dim1 not in self.dim_names or dim2 not in self.dim_names:
             raise ValueError("Invalid dimension names")
