@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 
-def simple2Dplot(xx, yy, kde, xlabel=None, ylabel=None, title=None):
+def simple2Dplot(xx, yy, kdevals, xlabel=None, ylabel=None, title=None, show_plot=False):
     """
     return kde plot in 2D given output
     """
@@ -21,6 +21,8 @@ def simple2Dplot(xx, yy, kde, xlabel=None, ylabel=None, title=None):
         ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
+    if show_plot==True:
+        plt.show()
     return fig
 
 
