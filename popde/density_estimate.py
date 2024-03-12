@@ -171,9 +171,8 @@ class SimpleKernelDensityEstimation:
         # Evaluate the KDE at the grid points
         z = self.evaluate_scipy(positions)
 
-        zz = z.reshape(xx.shape)
-
         # Create the contour plot
+        zz = z.reshape(xx.shape)
         fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title='2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
         if file_name is not None:
             fig.savefig(file_name)
