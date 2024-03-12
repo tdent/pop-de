@@ -156,8 +156,11 @@ class SimpleKernelDensityEstimation:
         xx, yy = utils_plot.get_twoD_grid(self.data[:, idx_dim1], self.data[:, idx_dim2], num_points=num_points)
         positions = np.column_stack([xx.ravel(), yy.ravel()])
         #check if slice_dimensions  == dim(KDE) -  2
-        if len(slice_dims) != self.data.shape[1] - 2 :
+        if len(slice_dims) != self.data.shape[1] - 2:
             raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
+
+        if len(slice_dims) != len(slice_value):
+            raise ValueError(f"Number of slice dimensions must match number of slice values")
 
         # If slicing is specified, insert the slice values into the positions array
         if slice_values is not None:
