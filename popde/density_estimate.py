@@ -1,5 +1,7 @@
 import numpy as np
+import transform_utils as transf
 import utils_plot 
+
 
 class SimpleKernelDensityEstimation:
     """
@@ -13,15 +15,22 @@ class SimpleKernelDensityEstimation:
     evaluate(points):
         Evaluate the KDE at given data points.
     """
-    def __init__(self, data, backend='scipy', bandwidth=1., dim_names=None):
+    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
+                 backend='scipy', bandwidth=1., dim_names=None):
         """
         data: array-like, shape (n_samples, n_features)
-            points of the data define each kernel position
-            each row is a point, each column is a parameter.
+            Data points defining kernel positions
+            Each row is a point, each column is a parameter.
         kwargs:
-            bandwidth : The bandwidth of the kernel used for smoothing
-            dim_names : sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
-                        values must be strings
+            input_transf : None or sequence of strings, eg ('log', 'none', 'log')
+              describing transformations of data before KDE calculation
+            stdize : Boolean, whether to standardize all data dimensions
+            rescale : None or sequence of float, rescaling of dimensions immediately
+              before KDE calculation
+            backend : String, Processing method to do KDE calculation
+            bandwidth : Float or array of float, bandwidth of kernels used for smoothing
+            dim_names : Sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
+
         Example
         --------
         # Two dimensional case
@@ -50,13 +59,21 @@ class SimpleKernelDensityEstimation:
         """
         if len(data.shape) != 2:
             raise ValueError("Data must have shape (n_samples, n_features).")
+        self.ndim = self.data.shape[1]
 
         self.data = np.asarray(data)
+        self.input_transf = input_transf
+        self.stdize = stdize
+        self.rescale = rescale
+
         self.backend = backend
         self.bandwidth = bandwidth
         self.dim_names = dim_names
         if dim_names is not None:
             self.check_dimensionality()
+
+        # Do transformation, standardize and rescale input data
+        self.prepare_data()
 
         self.kernel_estimate = None
         # Initialize the KDE
@@ -65,10 +82,42 @@ class SimpleKernelDensityEstimation:
     def check_dimensionality(self):
         """
         Check if the dimension of training data matches the number of param names
+        and data preparation option values
         """
-        if self.data.shape[1] != len(self.dim_names):
-            raise ValueError("Dimensionality of data array does not match "
-                             "the number of dimension names.")
+        if self.dim_names is not None:
+            if len(self.dim_names) != self.ndim:
+                raise ValueError("Dimensionality of data array does not match "
+                                 "the number of dimension names.")
+        if self.input_transf is not None:
+            if len(self.input_transf) != self.ndim:
+                raise ValueError("Dimensionality of data array does not match "
+                                 "the number of transformation strings.")
+        if self.rescale is not None:
+            if len(self.rescale) != self.ndim:
+                raise ValueError("Dimensionality of data array does not match "
+                                 "the number of rescaling factors.")
+
+    def prepare_data(self):
+        """
+        Transform, standardize and rescale input data into KDE-ready data
+        """
+        if self.input_transf is not None:
+            self.transf_data = transf.transform_data(self.data, self.input_transf)
+        else:
+            self.transf_data = self.data
+
+        if self.stdize:
+            std_transf = ['stdize' for dim in self.ndim]
+            self.stds = np.std(self.transf_data, axis=0)  # record the stds
+            self.std_data = transf.transform_data(self.transf_data, std_transf)
+        else:
+            self.stds = None
+            self.std_data = self.transf_data
+
+        if self.rescale is not None:
+            self.kde_data = transf.transform_data(self.std_data, self.rescale)
+        else:
+            self.kde_data = self.std_data
 
     def fit(self):
         """
@@ -81,7 +130,7 @@ class SimpleKernelDensityEstimation:
         from scipy.stats import gaussian_kde
 
         # scipy takes data with shape (n_dimensions, n_samples)
-        self.kernel_estimate = gaussian_kde(self.data.T, bw_method=self.bandwidth)
+        self.kernel_estimate = gaussian_kde(self.kde_data.T, bw_method=self.bandwidth)
 
     def set_bandwidth(self, bandwidth):
         """
@@ -193,21 +242,23 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
     evaluate(points):
         Evaluate the KDE at given data points.
     """
-    def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None):
+    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
+                 backend='KDEpy', bandwidth=1., dim_names=None):
         # Same initialization as parent class but default to KDEpy
-        super().__init__(data, backend, bandwidth, dim_names)
+        super().__init__(data, input_transf, stdize, rescale,
+                         backend, bandwidth, dim_names)  # Arguments stay in same order
 
     def fit_KDEpy(self):
         from KDEpy.TreeKDE import TreeKDE
 
         # Bandwidth may be array-like with size n_samples
-        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.data)
+        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
 
     def evaluate_KDEpy(self, points):
         density_values = self.kernel_estimate.evaluate(points)
 
         return density_values
-       
+
 
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
