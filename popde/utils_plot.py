@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
 def simple2Dplot(xx, yy, kdevals, xlabel=None, ylabel=None, title=None, show_plot=False):
     """
     return kde plot in 2D given output
