@@ -59,9 +59,8 @@ class SimpleKernelDensityEstimation:
         """
         if len(data.shape) != 2:
             raise ValueError("Data must have shape (n_samples, n_features).")
-        self.ndim = self.data.shape[1]
-
         self.data = np.asarray(data)
+        self.ndim = self.data.shape[1]
         self.input_transf = input_transf
         self.stdize = stdize
         self.rescale = rescale
@@ -208,7 +207,7 @@ class SimpleKernelDensityEstimation:
         if len(slice_dims) != self.data.shape[1] - 2:
             raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
 
-        if len(slice_dims) != len(slice_value):
+        if len(slice_dims) != len(slice_values):
             raise ValueError(f"Number of slice dimensions must match number of slice values")
 
         # If slicing is specified, insert the slice values into the positions array
