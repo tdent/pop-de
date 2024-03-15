@@ -1,5 +1,5 @@
 import numpy as np
-#import transform_utils as transf
+import transform_utils as transf
 
 
 class SimpleKernelDensityEstimation:
