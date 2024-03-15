@@ -232,7 +232,6 @@ class SimpleKernelDensityEstimation:
         return fig
 
 
-
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
