@@ -198,6 +198,12 @@ class SimpleKernelDensityEstimation:
         """
         if dim1 not in self.dim_names or dim2 not in self.dim_names:
             raise ValueError("Invalid dimension names")
+    
+        if len(slice_dims) != self.data.shape[1] - 2:
+            raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
+
+        if len(slice_dims) != len(slice_values):
+            raise ValueError(f"Number of slice dimensions must match number of slice values")
 
         #Find the KDE dimensions to plot
         idx_dim1 = self.dim_names.index(dim1)
@@ -206,13 +212,7 @@ class SimpleKernelDensityEstimation:
         # Generate a grid for the contour plot
         xx, yy = utils_plot.get_twoD_grid(self.data[:, idx_dim1], self.data[:, idx_dim2], num_points=num_points)
         positions = np.column_stack([xx.ravel(), yy.ravel()])
-
-        if len(slice_dims) != self.data.shape[1] - 2:
-            raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
-
-        if len(slice_dims) != len(slice_values):
-            raise ValueError(f"Number of slice dimensions must match number of slice values")
-
+        
         # If slicing is specified, insert the slice values into the positions array
         if slice_values is not None:
             for slice_dim, slice_value in zip(slice_dims, slice_values):
