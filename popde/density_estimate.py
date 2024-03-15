@@ -198,13 +198,15 @@ class SimpleKernelDensityEstimation:
         """
         if dim1 not in self.dim_names or dim2 not in self.dim_names:
             raise ValueError("Invalid dimension names")
+
         #Find the KDE dimensions to plot
         idx_dim1 = self.dim_names.index(dim1)
         idx_dim2 = self.dim_names.index(dim2)
+
         # Generate a grid for the contour plot
         xx, yy = utils_plot.get_twoD_grid(self.data[:, idx_dim1], self.data[:, idx_dim2], num_points=num_points)
         positions = np.column_stack([xx.ravel(), yy.ravel()])
-        #check if slice_dimensions  == dim(KDE) -  2
+
         if len(slice_dims) != self.data.shape[1] - 2:
             raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
 
@@ -223,8 +225,10 @@ class SimpleKernelDensityEstimation:
         # Create the contour plot
         zz = z.reshape(xx.shape)
         fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title='2D Contour Plot of KDE for {dim1} and {dim2} (Sliced along {slice_dims})')
+
         if file_name is not None:
             fig.savefig(file_name)
+
         return fig
 
 
