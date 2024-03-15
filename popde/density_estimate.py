@@ -167,7 +167,7 @@ class SimpleKernelDensityEstimation:
         return density_values
 
 
-    def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, file_name=None, num_points=100, **kwargs):
+    def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, num_points=100, file_name=None, **kwargs):
         """
         Plot a 2D contour of the KDE with optional slicing along other dimensions.
 
@@ -176,6 +176,7 @@ class SimpleKernelDensityEstimation:
             - slice_dims: Dimensions to slice along (list or tuple).
             - slice_values: Values for slicing along slice_dims (list or tuple).
             - num_points: Number of points for the contour plot.
+            - file_name : Name for saving the plot
             - **kwargs: Additional keyword arguments passed to the `contour` function.
         Example:
             np.random.seed(42)
