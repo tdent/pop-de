@@ -198,7 +198,7 @@ class SimpleKernelDensityEstimation:
         """
         if dim1 not in self.dim_names or dim2 not in self.dim_names:
             raise ValueError("Invalid dimension names")
-        #get the samples along the dimensions 
+        #Find the KDE dimensions to plot
         idx_dim1 = self.dim_names.index(dim1)
         idx_dim2 = self.dim_names.index(dim2)
         # Generate a grid for the contour plot
