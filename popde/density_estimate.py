@@ -218,7 +218,7 @@ class SimpleKernelDensityEstimation:
                 positions = np.insert(positions, slice_idx, slice_value, axis=1)
 
         # Evaluate the KDE at the grid points
-        z = self.evaluate_scipy(positions)
+        z = self.evaluate(positions)
 
         # Create the contour plot
         zz = z.reshape(xx.shape)
