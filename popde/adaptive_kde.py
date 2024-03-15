@@ -92,8 +92,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         """
         Fit the adaptive KDE
         """
-        pilot_kde = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
-        pilot_values = pilot_kde.evaluate(self.kde_data)
+        pilot_values = self.kernel_estimate(self.data) 
         # Calculate per-point bandwidths as  re-assigning self.bandwidth
         self.calculate_per_point_bandwidths(pilot_values)
 
