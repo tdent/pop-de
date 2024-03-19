@@ -92,7 +92,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         """
         Fit the adaptive KDE
         """
-        pilot_values = self.kernel_estimate(self.data) 
+        pilot_kde = self.estimate()#TreeKDE(bw=self.bandwidth).fit(self.kde_data)
+        pilot_values = pilot_kde.evaluate(self.kde_data)
         # Calculate per-point bandwidths as  re-assigning self.bandwidth
         self.calculate_per_point_bandwidths(pilot_values)
 
@@ -190,3 +191,16 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return kdeval, self.optbw, self.optalpha
+
+# testing code
+mean1, sigma1 = 30.0, 8.0
+mean2, sigma2 = 60.0, 10.0
+n_samples = 1000
+rndgen = np.random.RandomState(seed=1)
+sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
+sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
+sample = np.column_stack((sample1, sample2))
+kde = AdaptiveBwKDE(sample, backend='awKDEpy' ,dim_names=['x', 'y'], alpha=0.5, input_transf=None)
+#get error AttributeError: 'AdaptiveBwKDE' object has no attribute 'estimate'
+# below work but did not use awKDEpy for adaptive bandwidth
+kde = AdaptiveBwKDE(sample, dim_names=['x', 'y'], alpha=0.5, input_transf=None)
