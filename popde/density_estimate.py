@@ -1,5 +1,6 @@
 import numpy as np
 import transform_utils as transf
+import utils_plot 
 
 
 class SimpleKernelDensityEstimation:
@@ -61,6 +62,7 @@ class SimpleKernelDensityEstimation:
         self.ndim = data.shape[1]
 
         self.data = np.asarray(data)
+        self.ndim = self.data.shape[1]
         self.input_transf = input_transf
         self.stdize = stdize
         self.rescale = rescale
@@ -165,6 +167,71 @@ class SimpleKernelDensityEstimation:
         density_values = self.kernel_estimate(points)
 
         return density_values
+
+
+    def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, num_points=100, file_name=None, **kwargs):
+        """
+        Plot a 2D contour of the KDE with optional slicing along other dimensions.
+
+        Parameters:
+            - dim1, dim2: Dimensions for the plot axes.
+            - slice_dims: Dimensions to slice along (list or tuple).
+            - slice_values: Values for slicing along slice_dims (list or tuple).
+            - num_points: Number of points for the contour plot.
+            - file_name : Name for saving the plot
+            - **kwargs: Additional keyword arguments passed to the `contour` function.
+        Example:
+            np.random.seed(42)
+            # Number of data points
+            num_points = 1000
+            # Mean and covariance matrix
+            mean = [0, 0, 0]
+            covariance_matrix = [[1, 0.5, 0.3],
+                                [0.5, 1, 0.2],
+                                [0.3, 0.2, 1]]
+
+            # Generate 3D normal distributed data
+            data = np.random.multivariate_normal(mean, covariance_matrix, num_points)
+            parameter = ['m1', 'm2', 'Mc']
+            kde = SimpleKernelDensityEstimation(sample,  dim_names=parameter)
+            # Plot a 2D contour with a slice along the 'z' dimensios
+            fig = kde.plot_2d_contour(parameter[0],parameter[1], 
+                    slice_dims=[parameter[2]], slice_values=[0], num_points=100)
+        """
+        if dim1 not in self.dim_names or dim2 not in self.dim_names:
+            raise ValueError("Invalid dimension names")
+    
+        if len(slice_dims) != self.data.shape[1] - 2:
+            raise ValueError(f"With {self.data.shape[1]} KDE dimensions, must specify {self.data.shape[1] - 2} slicing parameters for the plot")
+
+        if len(slice_dims) != len(slice_values):
+            raise ValueError(f"Number of slice dimensions must match number of slice values")
+
+        #Find the KDE dimensions to plot
+        idx_dim1 = self.dim_names.index(dim1)
+        idx_dim2 = self.dim_names.index(dim2)
+
+        # Generate a grid for the contour plot
+        xx, yy = utils_plot.get_twoD_grid(self.data[:, idx_dim1], self.data[:, idx_dim2], num_points=num_points)
+        positions = np.column_stack([xx.ravel(), yy.ravel()])
+        
+        # If slicing is specified, insert the slice values into the positions array
+        if slice_values is not None:
+            for slice_dim, slice_value in zip(slice_dims, slice_values):
+                slice_idx = self.dim_names.index(slice_dim)
+                positions = np.insert(positions, slice_idx, slice_value, axis=1)
+
+        # Evaluate the KDE at the grid points
+        z = self.evaluate(positions)
+
+        # Create the contour plot
+        zz = z.reshape(xx.shape)
+        fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title=f'KDE sliced along {slice_dims} at {slice_values})')
+
+        if file_name is not None:
+            fig.savefig(file_name)
+
+        return fig
 
 
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
