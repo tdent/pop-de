@@ -64,7 +64,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
     def calculate_per_point_bandwidths(self, pilot_values):
         """
-        Calculate per-point bandwidths using the Wang & Wang formula in
+        Calculate per-point bandwidths according to
         B. Wang and X. Wang, 2007, DOI: 10.1214/154957804100000000.
         Parameters:
         -----------
