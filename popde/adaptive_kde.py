@@ -19,15 +19,14 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
     sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
     sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
-    # Create and fit the adaptive KDE note backend must be set correctly
-    kde = AdaptiveBwKDE(sample, backend='awKDEpy', dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
+    # Create and fit the adaptive KDE 
+    kde = AdaptiveBwKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
     # Generate grid for plotting
     xgrid = np.linspace(sample1.min(), sample1.max(), 100)
     ygrid = np.linspace(sample2.min(), sample2.max(), 100)
     zgrid = np.linspace(sample3.min(), sample3.max(), 100)
     XX, YY, ZZ = np.meshgrid(xgrid, ygrid, zgrid)
     eval_pts = np.column_stack((XX.flatten(), YY.flatten(), ZZ.flatten()))
-    kde.fit()
 
     # Evaluate the KDE at the grid points
     density_values = kde.evaluate(eval_pts)
@@ -38,7 +37,12 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         # Additional parameter for the Wang & Wang formula
         self.alpha = alpha
         super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names)  
+                         backend, bandwidth, dim_names) 
+
+        #Adaptive bandwidth: compute pilot kdevals
+        pilot_values = self.evaluate(self.kde_data)
+        #Calculate per-point bandwidths as re-assigning self.bandwidth
+        self.calculate_per_point_bandwidths(pilot_values)
 
     def _local_bandwidth_factor(self, kde_values):
         """
@@ -80,19 +84,6 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
         # Use the local bandwidths to calculate per-point bandwidths
         self.bandwidth = self.bandwidth / local_bandwidths
-
-
-    def fit_awKDEpy(self):
-        """
-        Fit the adaptive KDE
-        """
-        pilot_kde = self.estimate()#TreeKDE(bw=self.bandwidth).fit(self.kde_data)
-        pilot_values = pilot_kde.evaluate(self.kde_data)
-        # Calculate per-point bandwidths as  re-assigning self.bandwidth
-        self.calculate_per_point_bandwidths(pilot_values)
-
-        # Update the KDE with per-point bandwidths
-        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
 
 
     def evaluate(self, points):
@@ -186,15 +177,3 @@ class AdaptiveKDELeaveOneOutCrossValidation():
 
         return kdeval, self.optbw, self.optalpha
 
-# testing code
-mean1, sigma1 = 30.0, 8.0
-mean2, sigma2 = 60.0, 10.0
-n_samples = 1000
-rndgen = np.random.RandomState(seed=1)
-sample1 = rndgen.normal(mean1, sigma1, size=n_samples)
-sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
-sample = np.column_stack((sample1, sample2))
-kde = AdaptiveBwKDE(sample, backend='awKDEpy' ,dim_names=['x', 'y'], alpha=0.5, input_transf=None)
-#get error AttributeError: 'AdaptiveBwKDE' object has no attribute 'estimate'
-# below work but did not use awKDEpy for adaptive bandwidth
-kde = AdaptiveBwKDE(sample, dim_names=['x', 'y'], alpha=0.5, input_transf=None)
