@@ -74,12 +74,6 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         Returns:
         --------
         per_point_bandwidths : array-like
-            Per-point bandwidths calculated using the Wang & Wang formula.
-            bw_i =  global_bw * local_bw_factor
-
-                local_bw_factor = (f(X_i)/g)^alpha
-                f(X_i) is pilot-KDE values
-                g is local factor given in local_bandwidth_factor
         """
         # Calculate the inverse of local bandwidth using the provided function
         local_bandwidths = self._local_bandwidth_factor(pilot_values)
