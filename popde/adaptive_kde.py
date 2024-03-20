@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 from density_estimate import VariableBwKDEPy 
-from KDEpy.TreeKDE import TreeKDE
+from scipy.stats import gmean
 
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
@@ -60,8 +60,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
            local bandwidth factor for adaptive 
            bandwidth.
         """
-        from scipy.stats import gmean
-        #geometric mean of kde values
+        #geometric mean of kde values using scipy
         g = gmean(kde_values)
         loc_bw_factor = (kde_values / g) ** self.alpha
         return loc_bw_factor
