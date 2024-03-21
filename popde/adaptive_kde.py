@@ -7,8 +7,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
-    self.alpha  = alpha an additional parameter from B. Wang and X. Wang, 
-    2007, DOI: 10.1214/154957804100000000.
+    The variation is controlled by an additional parameter 'alpha', see B. Wang and X. Wang, 2007, DOI: 10.1214/154957804100000000.
 
     Example:
     # Example of 3D KDE and plot for verification
@@ -54,7 +53,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
         Parameters:
         -----------
-        kde_values : array-like
+        pilot KDE_values : array-like
             The KDE values at the data point positions.
 
         Returns:
@@ -63,25 +62,22 @@ class AdaptiveBwKDE(VariableBwKDEPy):
            local bandwidth factor for adaptive 
            bandwidth.
         """
-        #geometric mean of kde values using scipy
+        #Geometric mean of pilot kde values 
         g = gmean(kde_values)
         loc_bw_factor = (kde_values / g) ** self.alpha
         return loc_bw_factor
 
     def set_per_point_bandwidth(self, pilot_values):
         """
-        Calculate per-point bandwidths
-        
+        Calculate per-point bandwidths 
+        and re-initialize KDE
+
         Parameters:
         -----------
         pilot_values : array-like
             The pilot KDE values at the data point positions.
         """
-        # Calculate adaptive inverse bandwidth factors
-        # and calculate per-point bandwidths
-        self.bandwidth /= self._local_bandwidth_factor(pilot_values)
-        #change bandwidth and re-initialize KDE 
-        self.set_bandwidth(self.bandwidth)
+        self.set_bandwidth(self.global_bandwidth /self._local_bandwidth_factor(pilot_values))
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
