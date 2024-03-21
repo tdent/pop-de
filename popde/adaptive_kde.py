@@ -42,7 +42,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         #Adaptive bandwidth: compute pilot kdevals
         self.pilot_values = self.evaluate(self.kde_data)
         #Calculate per-point bandwidths as re-assigning self.bandwidth
-        self.calculate_per_point_bandwidths(self.pilot_values)
+        self.set_per_point_bandwidth(self.pilot_values)
 
     def _local_bandwidth_factor(self, kde_values):
         """
@@ -65,10 +65,10 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         loc_bw_factor = (kde_values / g) ** self.alpha
         return loc_bw_factor
 
-    def calculate_per_point_bandwidths(self, pilot_values):
+    def set_per_point_bandwidth(self, pilot_values):
         """
-        Calculate per-point bandwidths according to
-        B. Wang and X. Wang, 2007, DOI: 10.1214/154957804100000000.
+        Calculate per-point bandwidths
+        
         Parameters:
         -----------
         pilot_values : array-like
