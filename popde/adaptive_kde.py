@@ -7,7 +7,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
-    self.alpha  = alpha an additional parameter for the Wang & Wang formula
+    self.alpha  = alpha an additional parameter from B. Wang and X. Wang, 
+    2007, DOI: 10.1214/154957804100000000.
+
     Example:
     # Example of 3D KDE and plot for verification
     mean1, sigma1 = 0.0, 1.0
