@@ -7,7 +7,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
     with variable bandwidth per point
-
+    self.alpha  = alpha an additional parameter for the Wang & Wang formula
     Example:
     # Example of 3D KDE and plot for verification
     mean1, sigma1 = 0.0, 1.0
@@ -34,8 +34,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     print(density_values)
     """
     def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
-        # Additional parameter for the Wang & Wang formula
         self.alpha = alpha
+        self.global_bandwidth = bandwidth
+
         super().__init__(data, input_transf, stdize, rescale,
                          backend, bandwidth, dim_names) 
 
@@ -73,21 +74,12 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         -----------
         pilot_values : array-like
             The pilot KDE values at the data point positions.
-
-        Returns:
-        --------
-        per_point_bandwidths : array-like
         """
-        # Calculate the inverse of local bandwidth using the provided function
-        local_bandwidths = self._local_bandwidth_factor(pilot_values)
-
-        # Use the local bandwidths to calculate per-point bandwidths
-        self.bandwidth = self.bandwidth / local_bandwidths
-
-
-    def evaluate(self, points):
-        density_values = self.kernel_estimate.evaluate(points)
-        return density_values
+        # Calculate adaptive inverse bandwidth factors
+        # and calculate per-point bandwidths
+        self.bandwidth /= self._local_bandwidth_factor(pilot_values)
+        #change bandwidth and re-initialize KDE 
+        self.set_bandwidth(self.bandwidth)
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
