@@ -3,6 +3,7 @@ import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
 
+
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
@@ -34,16 +35,18 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     density_values = density_values.reshape(XX.shape)
     print(density_values)
     """
-    def __init__(self, data, backend='KDEpy', bandwidth=1., dim_names=None, alpha=0.5,  input_transf=None, stdize=False, rescale=None):
+    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
+                 backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
 
+        # Set up initial KDE with fixed bandwidth
         super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names) 
+                         backend, bandwidth, dim_names)
 
-        #Adaptive bandwidth: compute pilot kdevals
+        # Compute pilot kde values at input points
         self.pilot_values = self.evaluate(self.kde_data)
-        #Calculate per-point bandwidths to  re-assign self.bandwidth and re-initialize KDE
+        # Calculate per-point bandwidths and apply them to fit adaptive KDE
         self.set_per_point_bandwidth(self.pilot_values)
 
     def _local_bandwidth_factor(self, kde_values):
@@ -62,22 +65,23 @@ class AdaptiveBwKDE(VariableBwKDEPy):
            local bandwidth factor for adaptive 
            bandwidth.
         """
-        #Geometric mean of pilot kde values 
+        # Geometric mean of pilot kde values 
         g = gmean(kde_values)
         loc_bw_factor = (kde_values / g) ** self.alpha
         return loc_bw_factor
 
     def set_per_point_bandwidth(self, pilot_values):
         """
-        Calculate per-point bandwidths 
-        and re-initialize KDE
+        Calculate per-point bandwidths and re-initialize KDE
 
         Parameters:
         -----------
         pilot_values : array-like
             The pilot KDE values at the data point positions.
         """
-        self.set_bandwidth(self.global_bandwidth /self._local_bandwidth_factor(pilot_values))
+        self.set_bandwidth(
+            self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
+        )
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
