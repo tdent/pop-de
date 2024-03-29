@@ -100,8 +100,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
         """
-        This method updates the adaptive parameter alpha and the global bandwidth, then performs adaptive calculations
-        to reassign the bandwidth and re-initialize the KDE.
+        Update the adaptive parameter alpha and the global bandwidth,
+        then perform adaptive calculations to 
+        reassign the bandwidth and re-initialize the KDE.
 
         Parameters:
             new_alpha (float): The new value for the adaptive parameter alpha.
