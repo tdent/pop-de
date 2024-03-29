@@ -109,7 +109,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             new_global_bw (float): The new value for the global bandwidth.
         """
         self.set_alpha(new_alpha)
-        self.global_bandwidth = new_global_bw
+        # use new global bandwith and fit it
+        self.set_bandwidth(new_global_bw)
 
         # Adaptive bandwidth: compute pilot kdevals
         self.pilot_values = self.evaluate(self.kde_data)
