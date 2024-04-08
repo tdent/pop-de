@@ -92,9 +92,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         """
         self.alpha = new_alpha
         #update bandwidth with new_alpha
-        self.set_per_point_bandwidth(self.pilot_values)
-       
-
+        self.set_per_point_bandwidth(self.pilot_values)       
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
         """
