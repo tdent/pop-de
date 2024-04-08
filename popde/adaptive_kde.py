@@ -105,7 +105,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             new_global_bw (float): The new value for the global bandwidth.
         """
         self.set_bandwidth(new_global_bw)
-        #calculate per-point bandwidths using set_alpha 
+        #update pilot_values using new global bandwidth
+        self.pilot_values = self.evaluate(self.kde_data)
+        #calculate per-point bandwidths using set_alpha
         self.set_alpha(new_alpha)
 
 
