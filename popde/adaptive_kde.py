@@ -54,13 +54,13 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         Calculate local bandwidth factor using expression in
         B. Wang and X. Wang, 2007, DOI: 10.1214/154957804100000000.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pilot KDE_values : array-like
             The KDE values at the data point positions.
 
-        Returns:
-        --------
+        Returns
+        -------
         loc_bw_factor : array-like
            local bandwidth factor for adaptive 
            bandwidth.
@@ -74,8 +74,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         """
         Calculate per-point bandwidths and re-initialize KDE
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pilot_values : array-like
             The pilot KDE values at the data point positions.
         """
@@ -85,29 +85,33 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     
     def set_alpha(self, new_alpha):
         """
-        Set the adaptive parameter alpha to a new value.
+        Set the adaptive parameter alpha to a new value and re-initialize KDE.
 
-        Parameter:
-            new_alpha (float): The new value for the adaptive parameter alpha.
+        Parameters
+        ----------
+        new_alpha : float
+            The new value for the adaptive parameter alpha.
         """
         self.alpha = new_alpha
-        #update bandwidth with new_alpha
+        # Update local bandwidths
         self.set_per_point_bandwidth(self.pilot_values)       
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
         """
         Update the adaptive parameter alpha and the global bandwidth,
-        then perform adaptive calculations to 
-        reassign the bandwidth and re-initialize the KDE.
+        then reassign local bandwidths and re-initialize the KDE.
 
-        Parameters:
-            new_alpha (float): The new value for the adaptive parameter alpha.
-            new_global_bw (float): The new value for the global bandwidth.
+        Parameters
+        ----------
+        new_alpha : float
+            The new value for the adaptive parameter alpha.
+        new_global_bw : float
+            The new value for the global bandwidth.
         """
         self.set_bandwidth(new_global_bw)
         #update pilot_values using new global bandwidth
         self.pilot_values = self.evaluate(self.kde_data)
-        #calculate per-point bandwidths using set_alpha
+        # Set alpha and calculate per-point bandwidths 
         self.set_alpha(new_alpha)
 
 
