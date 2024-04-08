@@ -144,13 +144,13 @@ class SimpleKernelDensityEstimation:
         """
         Evaluate the KDE allowing for different backends
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         points : array-like
             The parameter points at which the KDE will be evaluated
 
-        Returns:
-        --------
+        Returns
+        -------
         density_values : array-like
             The estimated density values at the given points
             using a standard gaussian kernel
@@ -168,18 +168,28 @@ class SimpleKernelDensityEstimation:
 
         return density_values
 
-
     def plot_2d_contour(self, dim1, dim2, slice_dims=None, slice_values=None, num_points=100, file_name=None, **kwargs):
         """
         Plot a 2D contour of the KDE with optional slicing along other dimensions.
 
-        Parameters:
-            - dim1, dim2: Dimensions for the plot axes.
-            - slice_dims: Dimensions to slice along (list or tuple).
-            - slice_values: Values for slicing along slice_dims (list or tuple).
-            - num_points: Number of points for the contour plot.
-            - file_name : Name for saving the plot
-            - **kwargs: Additional keyword arguments passed to the `contour` function.
+        Parameters
+        ----------
+        dim1, dim2 : string
+            Dimension names for the plot axes.
+        slice_dims : iterable of string
+            Dimensions to slice along.
+        slice_values : iterable of float
+            Values for slicing along slice_dims.
+        num_points : int
+            Number of grid points to evaluate along each axis.
+        file_name : string
+            File to save the plot in.
+
+        Returns
+        -------
+        fig : matplotlib.Figure instance
+            Plot handle       
+
         Example:
             np.random.seed(42)
             # Number of data points
@@ -198,6 +208,7 @@ class SimpleKernelDensityEstimation:
             fig = kde.plot_2d_contour(parameter[0],parameter[1], 
                     slice_dims=[parameter[2]], slice_values=[0], num_points=100)
         """
+        # Input checking
         if dim1 not in self.dim_names or dim2 not in self.dim_names:
             raise ValueError("Invalid dimension names")
     
@@ -207,7 +218,7 @@ class SimpleKernelDensityEstimation:
         if len(slice_dims) != len(slice_values):
             raise ValueError(f"Number of slice dimensions must match number of slice values")
 
-        #Find the KDE dimensions to plot
+        # Find the KDE dimensions to plot
         idx_dim1 = self.dim_names.index(dim1)
         idx_dim2 = self.dim_names.index(dim2)
 
