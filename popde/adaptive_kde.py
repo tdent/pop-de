@@ -91,11 +91,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             new_alpha (float): The new value for the adaptive parameter alpha.
         """
         self.alpha = new_alpha
-        # compute pilot_values
-        self.pilot_values = self.evaluate(self.kde_data)
-
-        #update bandwidth with new alpha
+        #update bandwidth with new_alpha
         self.set_per_point_bandwidth(self.pilot_values)
+       
 
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
@@ -108,15 +106,9 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             new_alpha (float): The new value for the adaptive parameter alpha.
             new_global_bw (float): The new value for the global bandwidth.
         """
-        self.set_alpha(new_alpha)
-        # use new global bandwith and fit it
         self.set_bandwidth(new_global_bw)
-
-        # Adaptive bandwidth: compute pilot kdevals
-        self.pilot_values = self.evaluate(self.kde_data)
-
-        # Calculate per-point bandwidths to reassign self.bandwidth and re-initialize KDE
-        self.set_per_point_bandwidth(self.pilot_values)
+        #calculate per-point bandwidths using 
+        self.set_alpha(new_alpha)
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
