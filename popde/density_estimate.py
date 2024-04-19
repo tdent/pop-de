@@ -120,6 +120,25 @@ class SimpleKernelDensityEstimation:
         else:
             self.kde_data = self.std_data
 
+
+    def kde_to_transf_units(self, kde_values):
+        """
+        Perform transformation from KDE data units to transformed data units
+        Implement transformation logic 
+        assign self.kde_values in transformed units
+        """
+        transformed_values = ...  #define Jacobian or other transformation
+        self.kde_values  = transformed_values
+        
+
+    def kde_to_original_units(self, kde_values):
+        """
+        Perform transformation from KDE data units 
+        to original data units
+        """
+        original_values = ...  # Transformation logic
+        self.kde_values = original_values
+
     def fit(self):
         """
         General fit method allowing for different backends
@@ -243,6 +262,7 @@ class SimpleKernelDensityEstimation:
             fig.savefig(file_name)
 
         return fig
+
 
 
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
