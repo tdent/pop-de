@@ -121,16 +121,47 @@ class SimpleKernelDensityEstimation:
             self.kde_data = self.std_data
 
 
-    def kde_to_transf_units(self, kde_values, variable):
+    def kde_to_transf_units(self, kde_values, transformation_options):
         """
-        return kde_values  from kde_data units to the
-        desired units
+        Apply specified transformations to KDE values for any variable
+
+        Parameters:
+        kde_values : numpy.ndarray
+            The KDE values to be transformed.
+            It should be an array with dimensions (N_samples, N_dimensions),
+            where N_samples is the number of samples 
+            and N_dimensions is the number of dimensions of the KDE.
+
+        transformation_options : list of str
+            A list containing transformation options for 
+            each dimension of the KDE. Each element of the list
+            should be one of the following strings: 'log', 'ln', or 'exp'. 
+            The length of this list should be
+            equal to the number of dimensions of the KDE.
+
+        Returns:
+        numpy.ndarray
+            The transformed KDE values.
+
+        Raises:
+        ValueError: If an invalid transformation option is provided.
+        apply tranformation on kde values
         """
-        if variable in ['log', 'ln']:
-            kde_values *= 1.0/data_values
-        elif varibale == 'exp':
-            kde_value *= np.exp(data_values)
-        return kde_values
+        new_kde_values = np.copy(kde_values)#avoid modifying the original array
+
+        # Iterate over each transformation option 
+        #and apply the corresponding transformation
+        for i, option in enumerate(transformation_options):
+            if option in['log', 'ln']:
+                # Apply log transformation for that variable
+                new_kde_values *= 1 / self.data[:, i]
+            elif option == 'exp':
+                # Apply exponential transformation
+                new_kde_values *= np.exp(self.data[:, i])
+            else:
+                raise ValueError(f"Invalid transformation option at index {i}: {option}")
+
+        return new_kde_values
 
 
     def fit(self):
