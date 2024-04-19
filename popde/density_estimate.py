@@ -121,23 +121,17 @@ class SimpleKernelDensityEstimation:
             self.kde_data = self.std_data
 
 
-    def kde_to_transf_units(self, kde_values):
+    def kde_to_transf_units(self, kde_values, variable):
         """
-        Perform transformation from KDE data units to transformed data units
-        Implement transformation logic 
-        assign self.kde_values in transformed units
+        return kde_values  from kde_data units to the
+        desired units
         """
-        transformed_values = ...  #define Jacobian or other transformation
-        self.kde_values  = transformed_values
-        
+        if variable in ['log', 'ln']:
+            kde_values *= 1.0/data_values
+        elif varibale == 'exp':
+            kde_value *= np.exp(data_values)
+        return kde_values
 
-    def kde_to_original_units(self, kde_values):
-        """
-        Perform transformation from KDE data units 
-        to original data units
-        """
-        original_values = ...  # Transformation logic
-        self.kde_values = original_values
 
     def fit(self):
         """
