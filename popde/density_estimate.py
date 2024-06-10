@@ -25,6 +25,7 @@ class SimpleKernelDensityEstimation:
             input_transf : None or sequence of strings, eg ('log', 'none', 'log')
               describing transformations of data before KDE calculation
             stdize : Boolean, whether to standardize all data dimensions
+              [TODO - allow standardization in a subset of dimensions?]
             rescale : None or sequence of float, rescaling of dimensions immediately
               before KDE calculation
             backend : String, Processing method to do KDE calculation
