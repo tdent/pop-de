@@ -121,11 +121,12 @@ class SimpleKernelDensityEstimation:
             self.kde_data = self.std_data
 
 
-    def kde_to_transf_units(self, kde_values, transformation_options):
+    def kde_to_transf_units(self, eval_values, kde_values, transformation_options):
         """
         Apply specified transformations to KDE values for any variable
 
         Parameters:
+        eval_values: np.ndarray, the evaluation points (N, D) where N is number of points and D is dimensions
         kde_values : numpy.ndarray
             The KDE values to be transformed.
             It should be an array with dimensions (N_samples, N_dimensions),
@@ -147,17 +148,37 @@ class SimpleKernelDensityEstimation:
         ValueError: If an invalid transformation option is provided.
         apply tranformation on kde values
         """
-        new_kde_values = np.copy(kde_values)#avoid modifying the original array
+        # Validate the dimensions assuming eval_values have n_samples, n_feature
+        num_points, num_dims = eval_values.shape
+        if len(transformation_options) != num_dims:
+            raise ValueError("The transformation list length must match the number of dimensions in eval_vals")
+       
+        #get variables grid values separately for Jacobian: This can be problematic
+        eval_pts = []
+        for dim in num_dims:
+            variable_values = eval_values[:, dim]
+            # Determine the unique values and their order
+            unique_values = np.unique(variable_values)
 
+            # Determine the grid shape for the current dimension
+            shape = (len(np.unique(eval_values[:, i])) for i in range(num_dims))
+
+            # Reshape the dimension values to the determined grid shape
+            grid = dim_values.reshape(shape)
+
+            eval_pts.append(grid)
+
+        new_kde_values = np.copy(kde_values)#avoid modifying the original array
+        #Reshape KDE and eval to correct dimensions
         # Iterate over each transformation option 
         #and apply the corresponding transformation
         for i, option in enumerate(transformation_options):
             if option in['log', 'ln']:
                 # Apply log transformation for that variable
-                new_kde_values *= 1 / self.data[:, i]
+                new_kde_values *= 1 / eval_pts[:, i]
             elif option == 'exp':
                 # Apply exponential transformation
-                new_kde_values *= np.exp(self.data[:, i])
+                new_kde_values *= np.exp(eval_pts[:, i])
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
