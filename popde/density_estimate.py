@@ -155,30 +155,44 @@ class SimpleKernelDensityEstimation:
        
         #get variables grid values separately for Jacobian: This can be problematic
         eval_pts = []
-        for dim in num_dims:
+        for dim in range(num_dims):
+            print(dim)
             variable_values = eval_values[:, dim]
             # Determine the unique values and their order
             unique_values = np.unique(variable_values)
+            print(unique_values) 
 
             # Determine the grid shape for the current dimension
-            shape = (len(np.unique(eval_values[:, i])) for i in range(num_dims))
+            print(len(np.unique(eval_values[:, 0])))
+            print(len(np.unique(eval_values[:, 1])))
+            print(len(np.unique(eval_values[:, 2])))
+            aa = [len(np.unique(eval_values[:, i])) for i in range(num_dims)]
+            
+            shape = tuple(aa)#(len(np.unique(eval_values[:, i])) for i in range(num_dims))
 
             # Reshape the dimension values to the determined grid shape
-            grid = dim_values.reshape(shape)
-
+            grid = variable_values.reshape(shape)
+            print(grid.shape)
             eval_pts.append(grid)
 
         new_kde_values = np.copy(kde_values)#avoid modifying the original array
         #Reshape KDE and eval to correct dimensions
         # Iterate over each transformation option 
         #and apply the corresponding transformation
+        #change KDE shape 
+        new_kde_values = new_kde_values.reshape(grid.shape)
+
         for i, option in enumerate(transformation_options):
+            print(i, type(option))
             if option in['log', 'ln']:
+                print("option is ", option)
                 # Apply log transformation for that variable
-                new_kde_values *= 1 / eval_pts[:, i]
+                new_kde_values *= 1.0 / eval_pts[i]
             elif option == 'exp':
                 # Apply exponential transformation
-                new_kde_values *= np.exp(eval_pts[:, i])
+                new_kde_values *= np.exp(eval_pts[i])
+            elif option ==None:
+                print("no need for Jacobian")
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
