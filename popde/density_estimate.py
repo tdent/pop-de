@@ -126,12 +126,13 @@ class SimpleKernelDensityEstimation:
         Apply specified transformations to KDE values for any variable
 
         Parameters:
-        eval_values: np.ndarray, the evaluation points (N, D) where N is number of points and D is dimensions
+        eval_values: np.ndarray, the evaluation points 
+        with shape [N_samples, N_features] 
         kde_values : numpy.ndarray
             The KDE values to be transformed.
-            It should be an array with dimensions (N_samples, N_dimensions),
+            It should be an array with dimensions (N_samples, N_features),
             where N_samples is the number of samples 
-            and N_dimensions is the number of dimensions of the KDE.
+            and N_features is the number of dimensions of the KDE.
 
         transformation_options : list of str
             A list containing transformation options for 
@@ -142,37 +143,29 @@ class SimpleKernelDensityEstimation:
 
         Returns:
         numpy.ndarray
-            The transformed KDE values.
+            The transformed KDE values. (Jacobian of transformation)
 
         Raises:
         ValueError: If an invalid transformation option is provided.
         apply tranformation on kde values
         """
-        # Validate the dimensions assuming eval_values have n_samples, n_feature
+        # Validate the dimensions assuming eval_values have n_samples, n_features
         num_points, num_dims = eval_values.shape
         if len(transformation_options) != num_dims:
             raise ValueError("The transformation list length must match the number of dimensions in eval_vals")
        
-        #get variables grid values separately for Jacobian: This can be problematic
+        #get variables grid values separately for Jacobian: can be problematic
         eval_pts = []
         for dim in range(num_dims):
-            print(dim)
             variable_values = eval_values[:, dim]
             # Determine the unique values and their order
             unique_values = np.unique(variable_values)
-            print(unique_values) 
 
             # Determine the grid shape for the current dimension
-            print(len(np.unique(eval_values[:, 0])))
-            print(len(np.unique(eval_values[:, 1])))
-            print(len(np.unique(eval_values[:, 2])))
-            aa = [len(np.unique(eval_values[:, i])) for i in range(num_dims)]
-            
-            shape = tuple(aa)#(len(np.unique(eval_values[:, i])) for i in range(num_dims))
+            shape = tuple([len(np.unique(eval_values[:, i])) for i in range(num_dims)])
 
             # Reshape the dimension values to the determined grid shape
             grid = variable_values.reshape(shape)
-            print(grid.shape)
             eval_pts.append(grid)
 
         new_kde_values = np.copy(kde_values)#avoid modifying the original array
