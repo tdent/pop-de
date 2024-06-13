@@ -121,7 +121,7 @@ class SimpleKernelDensityEstimation:
             self.kde_data = self.std_data
 
 
-    def kde_to_transf_units(self, eval_values, kde_values, transformation_options):
+    def evaluate_with_transf(self, points):
         """
         Apply specified transformations to KDE values for any variable
 
