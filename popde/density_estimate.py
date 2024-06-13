@@ -139,36 +139,43 @@ class SimpleKernelDensityEstimation:
         """
         ### Transform points with transf, normalize, rescale
         if self.input_transf is not None:
-            points = transf.transform_data(points, self.input_transf)
-
+            transf_points = transf.transform_data(points, self.input_transf)
+        else:
+            transf_points = points
         #normalize
         if self.stdize:
             std_transf = ['stdize' for dim in self.ndim]
-            points = transf.transform_data(points, std_transf)
+            std_values_for_points = np.std(transf_points, axis=0)  # record the stds
+            std_points = transf.transform_data(transf_points, std_transf)
+        else:
+            std_values_for_points = None
+            std_points = transf_points
 
         #rescale
         if self.rescale is not None:
-            transf_points = transf.transform_data(points, self.rescale)
+            transf_data = transf.transform_data(std_points, self.rescale)
         else:
-            transf_points = points
+            transf_data = std_points
 
         #Evaluate kde on transform points
-        kde_vals = self.evaluate(transf_points)
+        kde_vals = self.evaluate(transf_data)
 
-        num_points, num_dims = transf_points.shape
+        num_points, num_dims = transf_data.shape
         if len(self.input_transf) != num_dims:
             raise ValueError("The transformation list length must match the number of dimensions in eval_vals")
-       
+      
+        #Transform transf_data back to original
+        back_original_points = transf.reverse_transform(transf_data, self.input_transf, std_values_for_points, self.rescale) 
         #get Jacobians
         for i, option in enumerate(self.input_transf):
             print(i, type(option))
             if option in['log', 'ln']:
                 print("option is ", option)
                 # Apply log transformation for that variable
-                kde_vals *= 1.0 / transf_points[:, i]
+                kde_vals *= 1.0 / back_original_points[:, i]
             elif option == 'exp':
                 # Apply exponential transformation
-                kde_vals *= np.exp(transf_points[:, i])
+                kde_vals *= np.exp(back_original_points[:, i])
             elif option =='none':
                 print("no need for Jacobian")
             else:
