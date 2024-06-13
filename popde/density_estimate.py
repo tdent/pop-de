@@ -123,73 +123,58 @@ class SimpleKernelDensityEstimation:
 
     def evaluate_with_transf(self, points):
         """
-        Apply specified transformations to KDE values for any variable
+        Transforms the evaluate points based on specified transformations
+        , evaluates the kernel density estimate (KDE) on the transformed points
+         and adjusts the KDE values using the Jacobian of the transformations.
 
         Parameters:
-        eval_values: np.ndarray, the evaluation points 
-        with shape [N_samples, N_features] 
-        kde_values : numpy.ndarray
-            The KDE values to be transformed.
-            It should be an array with dimensions (N_samples, N_features),
-            where N_samples is the number of samples 
-            and N_features is the number of dimensions of the KDE.
-
-        transformation_options : list of str
-            A list containing transformation options for 
-            each dimension of the KDE. Each element of the list
-            should be one of the following strings: 'log', 'ln', or 'exp'. 
-            The length of this list should be
-            equal to the number of dimensions of the KDE.
+        -----------
+        points : array-like, shape (n_samples, n_features)
+            The original parameter space points to be transformed and evaluated.
 
         Returns:
-        numpy.ndarray
-            The transformed KDE values. (Jacobian of transformation)
-
-        Raises:
-        ValueError: If an invalid transformation option is provided.
-        apply tranformation on kde values
+        --------
+        kde_vals : array-like, shape (n_samples,)
+        The KDE values adjusted by the Jacobian of the transformations.
         """
-        # Validate the dimensions assuming eval_values have n_samples, n_features
-        num_points, num_dims = eval_values.shape
-        if len(transformation_options) != num_dims:
+        ### Transform points with transf, normalize, rescale
+        if self.input_transf is not None:
+            points = transf.transform_data(points, self.input_transf)
+
+        #normalize
+        if self.stdize:
+            std_transf = ['stdize' for dim in self.ndim]
+            points = transf.transform_data(points, std_transf)
+
+        #rescale
+        if self.rescale is not None:
+            transf_points = transf.transform_data(points, self.rescale)
+        else:
+            transf_points = points
+
+        #Evaluate kde on transform points
+        kde_vals = self.evaluate(transf_points)
+
+        num_points, num_dims = transf_points.shape
+        if len(self.input_transf) != num_dims:
             raise ValueError("The transformation list length must match the number of dimensions in eval_vals")
        
-        #get variables grid values separately for Jacobian: can be problematic
-        eval_pts = []
-        for dim in range(num_dims):
-            variable_values = eval_values[:, dim]
-            # Determine the unique values and their order
-            unique_values = np.unique(variable_values)
-
-            # Determine the grid shape for the current dimension
-            shape = tuple([len(np.unique(eval_values[:, i])) for i in range(num_dims)])
-
-            # Reshape the dimension values to the determined grid shape
-            grid = variable_values.reshape(shape)
-            eval_pts.append(grid)
-
-        new_kde_values = np.copy(kde_values)#avoid modifying the original array
-        #Reshape KDE and eval to correct dimensions
-        # Iterate over each transformation option 
-        #and apply the corresponding transformation
-        #change KDE shape 
-        new_kde_values = new_kde_values.reshape(grid.shape)
-
-        for i, option in enumerate(transformation_options):
+        #get Jacobians
+        for i, option in enumerate(self.input_transf):
             print(i, type(option))
             if option in['log', 'ln']:
                 print("option is ", option)
                 # Apply log transformation for that variable
-                new_kde_values *= 1.0 / eval_pts[i]
+                kde_vals *= 1.0 / transf_points[:, i]
             elif option == 'exp':
                 # Apply exponential transformation
-                new_kde_values *= np.exp(eval_pts[i])
-            elif option ==None:
+                kde_vals *= np.exp(transf_points[:, i])
+            elif option =='none':
                 print("no need for Jacobian")
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
-        return new_kde_values
+        return kde_vals
 
 
     def fit(self):
