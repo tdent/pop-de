@@ -123,9 +123,9 @@ class SimpleKernelDensityEstimation:
 
     def evaluate_with_transf(self, points):
         """
-        Transforms the evaluate points based on specified transformations
-        , evaluates the kernel density estimate (KDE) on the transformed points
-         and adjusts the KDE values using the Jacobian of the transformations.
+        Transforms the input points in the same way as the KDE training data,
+        evaluates the KDE on the transformed points and adjusts the KDE
+        values by the Jacobian of the transformations.
 
         Parameters:
         -----------
@@ -305,7 +305,6 @@ class SimpleKernelDensityEstimation:
             fig.savefig(file_name)
 
         return fig
-
 
 
 class VariableBwKDEPy(SimpleKernelDensityEstimation):
