@@ -164,18 +164,16 @@ class SimpleKernelDensityEstimation:
         if len(self.input_transf) != num_dims:
             raise ValueError("The transformation list length must match the number of dimensions in eval_vals")
       
-        #Transform transf_data back to original
-        back_original_points = transf.reverse_transform(transf_data, self.input_transf, std_values_for_points, self.rescale) 
-        #get Jacobians
+        #get Jacobians using points in original units
         for i, option in enumerate(self.input_transf):
             print(i, type(option))
             if option in['log', 'ln']:
                 print("option is ", option)
                 # Apply log transformation for that variable
-                kde_vals *= 1.0 / back_original_points[:, i]
+                kde_vals *= 1.0 / points[:, i]
             elif option == 'exp':
                 # Apply exponential transformation
-                kde_vals *= np.exp(back_original_points[:, i])
+                kde_vals *= np.exp(points[:, i])
             elif option =='none':
                 print("no need for Jacobian")
             else:
