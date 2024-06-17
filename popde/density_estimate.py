@@ -166,7 +166,6 @@ class SimpleKernelDensityEstimation:
       
         #get Jacobians using points in original units
         for i, option in enumerate(self.input_transf):
-            print(i, type(option))
             if option in['log', 'ln']:
                 print("option is ", option)
                 # Apply log transformation for that variable
@@ -174,7 +173,7 @@ class SimpleKernelDensityEstimation:
             elif option == 'exp':
                 # Apply exponential transformation
                 kde_vals *= np.exp(points[:, i])
-            elif option =='none':
+            elif option =='none' or option =='None':
                 print("no need for Jacobian")
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
