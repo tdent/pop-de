@@ -164,7 +164,6 @@ class SimpleKernelDensityEstimation:
         #get Jacobians using points in original units
         for i, option in enumerate(self.input_transf):
             if option in['log', 'ln']:
-                print("option is ", option)
                 # Apply log transformation for that variable
                 kde_vals *= 1.0 / points[:, i]
             elif option == 'exp':
