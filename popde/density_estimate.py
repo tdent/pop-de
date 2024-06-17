@@ -169,7 +169,7 @@ class SimpleKernelDensityEstimation:
             elif option == 'exp':
                 # Apply exponential transformation
                 kde_vals *= np.exp(points[:, i])
-            elif option =='none' or option =='None':
+            elif option in ('none', 'None'):
                 print("no need for Jacobian")
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
