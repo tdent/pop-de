@@ -160,9 +160,6 @@ class SimpleKernelDensityEstimation:
         #Evaluate kde on transform points
         kde_vals = self.evaluate(transf_data)
 
-        num_points, num_dims = transf_data.shape
-        if len(self.input_transf) != num_dims:
-            raise ValueError("The transformation list length must match the number of dimensions in eval_vals")
       
         #get Jacobians using points in original units
         for i, option in enumerate(self.input_transf):
