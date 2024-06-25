@@ -160,21 +160,32 @@ class SimpleKernelDensityEstimation:
         #Evaluate kde on transform points
         kde_vals = self.evaluate(transf_data)
 
-      
-        #get Jacobians using points in original units
         for i, option in enumerate(self.input_transf):
             if option in['log', 'ln']:
                 # Apply log transformation for that variable
-                kde_vals *= 1.0 / points[:, i]
+                Jacobian_fatcor = 1.0 / points[:, i]
             elif option == 'exp':
                 # Apply exponential transformation
-                kde_vals *= np.exp(points[:, i])
+                Jacobian_factor = np.exp(points[:, i])
             elif option in ('none', 'None'):
                 print("no need for Jacobian")
+                Jacobian_factor = np.ones(len(points[:, i])) 
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
+            #std and rescale
+            if std is not None:
+                Jacobian_std =  transf.transform_data(Jacobian_factor, 'stdize') 
+            else:
+                Jacobian_std = Jacobian_factor
+            if rescale is not None:
+                Jacobian_factor_rescale = transf.transform_data(Jacobian_std, self.rescale)
+            else:
+                Jacobian_factor_rescale = Jacobian_std
+            #multiply KDE with Jacobian factor
+            kde_transf_vals *= Jacobian_factor_rescale
 
-        return kde_vals
+
+        return kde_transf_vals
 
 
     def fit(self):
