@@ -161,9 +161,10 @@ class SimpleKernelDensityEstimation:
         kde_vals = self.evaluate(transf_data)
 
         for i, option in enumerate(self.input_transf):
+            print("opt =", option)
             if option in['log', 'ln']:
                 # Apply log transformation for that variable
-                Jacobian_fatcor = 1.0 / points[:, i]
+                Jacobian_factor = 1.0 / points[:, i]
             elif option == 'exp':
                 # Apply exponential transformation
                 Jacobian_factor = np.exp(points[:, i])
@@ -173,11 +174,12 @@ class SimpleKernelDensityEstimation:
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
             #std and rescale
-            if std is not None:
+            print(Jacobian_factor)
+            if self.stdize is not None:
                 Jacobian_std =  transf.transform_data(Jacobian_factor, 'stdize') 
             else:
                 Jacobian_std = Jacobian_factor
-            if rescale is not None:
+            if self.rescale is not None:
                 Jacobian_factor_rescale = transf.transform_data(Jacobian_std, self.rescale)
             else:
                 Jacobian_factor_rescale = Jacobian_std
