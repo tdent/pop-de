@@ -174,7 +174,6 @@ class SimpleKernelDensityEstimation:
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
             #std and rescale
-            print(Jacobian_factor)
             if self.stdize is not None:
                 if np.std(Jacobian_factor) == 0.0:
                     Jacobian_std = Jacobian_factor
