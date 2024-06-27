@@ -176,7 +176,10 @@ class SimpleKernelDensityEstimation:
             #std and rescale
             print(Jacobian_factor)
             if self.stdize is not None:
-                Jacobian_std =  transf.transform_data(Jacobian_factor, 'stdize') 
+                if np.std(Jacobian_factor) == 0.0:
+                    Jacobian_std = Jacobian_factor
+                else:
+                    Jacobian_std =  Jacobian_factor/np.std(Jacobian_factor) 
             else:
                 Jacobian_std = Jacobian_factor
             if self.rescale is not None:
@@ -184,10 +187,10 @@ class SimpleKernelDensityEstimation:
             else:
                 Jacobian_factor_rescale = Jacobian_std
             #multiply KDE with Jacobian factor
-            kde_transf_vals *= Jacobian_factor_rescale
+            kde_vals   *= Jacobian_factor_rescale
 
 
-        return kde_transf_vals
+        return kde_vals
 
 
     def fit(self):
