@@ -137,7 +137,6 @@ class SimpleKernelDensityEstimation:
         kde_vals : array-like, shape (n_samples,)
         The KDE values adjusted by the Jacobian of the transformations.
         """
-        ### Transform points with transf, normalize, rescale
         if self.input_transf is not None:
             transf_points = transf.transform_data(points, self.input_transf)
         else:
@@ -150,7 +149,6 @@ class SimpleKernelDensityEstimation:
         else:
             std_values_for_points = None
             std_points = transf_points
-
         #rescale
         if self.rescale is not None:
             transf_data = transf.transform_data(std_points, self.rescale)
@@ -160,33 +158,33 @@ class SimpleKernelDensityEstimation:
         #Evaluate kde on transform points
         kde_vals = self.evaluate(transf_data)
 
+        # Jacobian of transform
         for i, option in enumerate(self.input_transf):
-            print("opt =", option)
             if option in['log', 'ln']:
-                # Apply log transformation for that variable
-                Jacobian_factor = 1.0 / points[:, i]
+                input_Jacobian = 1.0 / points[:, i]
             elif option == 'exp':
-                # Apply exponential transformation
-                Jacobian_factor = np.exp(points[:, i])
+                input_Jacobian = np.exp(points[:, i])
             elif option in ('none', 'None'):
-                print("no need for Jacobian")
-                Jacobian_factor = np.ones(len(points[:, i])) 
+                #print("no need for Jacobian")
+                input_Jacobian  = points[:, i]
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
-            #std and rescale
+
+            #stdardize 
             if self.stdize is not None:
-                if np.std(Jacobian_factor) == 0.0:
-                    Jacobian_std = Jacobian_factor
-                else:
-                    Jacobian_std =  Jacobian_factor/np.std(Jacobian_factor) 
+                Jacobian_std_factor =  1.0/np.std(input_Jacobian) 
             else:
-                Jacobian_std = Jacobian_factor
+                Jacobian_std_factor = 1.0
+
+            #rescale
             if self.rescale is not None:
-                Jacobian_factor_rescale = transf.transform_data(Jacobian_std, self.rescale)
+                Jacobian_rescale_factor = self.rescale[i]
             else:
-                Jacobian_factor_rescale = Jacobian_std
+                Jacobian_rescale_factor = 1.0
+
+            Total_Jacobian =  input_Jacobian * Jacobian_std_factor * Jacobian_rescale_factor
             #multiply KDE with Jacobian factor
-            kde_vals   *= Jacobian_factor_rescale
+            kde_vals   *= Total_Jacobian
 
 
         return kde_vals
