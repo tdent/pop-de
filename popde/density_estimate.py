@@ -112,13 +112,12 @@ class SimpleKernelDensityEstimation:
             self.stds = np.std(self.transf_data, axis=0)  # record the stds
             self.std_data = transf.transform_data(self.transf_data, std_transf)
         else:
-            self.stds = None
             self.std_data = self.transf_data
 
         if self.rescale is not None:
-            print("resclae", self.rescale)
-            quit()
+            print("self tests tran, rescale", self.input_transf, self.rescale)
             self.kde_data = transf.transform_data(self.std_data, self.rescale)
+            print("rescaling done")
         else:
             self.kde_data = self.std_data
 
@@ -148,12 +147,12 @@ class SimpleKernelDensityEstimation:
         if self.stdize:
             std_points = transf.transform_data(transf_points, 1.0/self.stds)
         else:
-            std_values_for_points = None
             std_points = transf_points
 
         # Rescale each parameter
         if self.rescale is not None:
-            transf_data = transf.transform_data(std_points, 1.0/self.rescale)
+            transf_data = transf.transform_data(std_points, self.rescale)
+            
         else:
             transf_data = std_points
 
