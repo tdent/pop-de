@@ -182,9 +182,7 @@ class SimpleKernelDensityEstimation:
                 Jacobian_rescale_factor = 1.0
 
             Total_Jacobian =  input_Jacobian * Jacobian_std_factor * Jacobian_rescale_factor
-            #multiply KDE with Jacobian factor
             kde_vals   *= Total_Jacobian
-
 
         return kde_vals
 
