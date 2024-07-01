@@ -108,7 +108,7 @@ class SimpleKernelDensityEstimation:
             self.transf_data = self.data
 
         if self.stdize:
-            std_transf = ['stdize' for dim in self.ndim]
+            std_transf = ['stdize'] *self.ndim
             self.stds = np.std(self.transf_data, axis=0)  # record the stds
             self.std_data = transf.transform_data(self.transf_data, std_transf)
         else:
@@ -116,6 +116,8 @@ class SimpleKernelDensityEstimation:
             self.std_data = self.transf_data
 
         if self.rescale is not None:
+            print("resclae", self.rescale)
+            quit()
             self.kde_data = transf.transform_data(self.std_data, self.rescale)
         else:
             self.kde_data = self.std_data
@@ -151,7 +153,7 @@ class SimpleKernelDensityEstimation:
 
         # Rescale each parameter
         if self.rescale is not None:
-            transf_data = transf.transform_data(std_points, self.rescale)
+            transf_data = transf.transform_data(std_points, 1.0/self.rescale)
         else:
             transf_data = std_points
 
@@ -170,8 +172,9 @@ class SimpleKernelDensityEstimation:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
             #standardize 
-            if self.stdize is not None:
-                Jacobian_std_factor =  transf.apply_transf(input_Jacobian,  'stdize') 
+            if self.stdize:
+                print(self.stdize)
+                Jacobian_std_factor = self.stds[i]
             else:
                 Jacobian_std_factor = 1.0
 
