@@ -136,6 +136,7 @@ class SimpleKernelDensityEstimation:
         kde_vals : array-like, shape (n_samples,)
         The KDE values adjusted by the Jacobian of the transformations.
         """
+        # Initial transformation
         if self.input_transf is not None:
             transf_points = transf.transform_data(points, self.input_transf)
         else:
@@ -143,11 +144,11 @@ class SimpleKernelDensityEstimation:
 
         # Divide each parameter by the std of the training data
         if self.stdize:
-            std_points = transf.transform_data(transf_points, 1.0/self.stds)
+            std_points = transf.transform_data(transf_points, 1. / self.stds)
         else:
             std_points = transf_points
 
-        # Rescale each parameter
+        # Rescaling
         if self.rescale is not None:
             transf_data = transf.transform_data(std_points, self.rescale)       
         else:
@@ -156,28 +157,22 @@ class SimpleKernelDensityEstimation:
         # Evaluate kde on transform points
         kde_vals = self.evaluate(transf_data)
 
-        # Jacobian of transform
+        # Jacobian of transforms for each dimension
         for i, option in enumerate(self.input_transf):
             if option in['log', 'ln']:
-                input_Jacobian = 1.0 / points[:, i]
+                input_Jacobian = 1. / points[:, i]
             elif option == 'exp':
                 input_Jacobian = np.exp(points[:, i])
             elif option in ('none', 'None'):
-                input_Jacobian = 1.0 
+                input_Jacobian = 1. 
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
             # Jacobian for training data standardization
-            if self.stdize:
-                std_Jacobian = self.stds[i]
-            else:
-                std_Jacobian = 1.0
+            std_Jacobian = self.stds[i] if self.stdize else 1.
 
             # Jacobian for rescaling factor
-            if self.rescale is not None:
-                rescale_Jacobian = self.rescale[i]
-            else:
-                rescale_Jacobian = 1.0
+            rescale_Jacobian = self.rescale[i] if self.rescale is not None else 1.
 
             kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian 
 
