@@ -165,7 +165,7 @@ class SimpleKernelDensityEstimation:
             elif option == 'exp':
                 input_Jacobian = np.exp(points[:, i])
             elif option in ('none', 'None'):
-                input_Jacobian  = points[:, i]
+                input_Jacobian  = 1.0 
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
