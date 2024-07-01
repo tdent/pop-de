@@ -141,7 +141,8 @@ class SimpleKernelDensityEstimation:
             transf_points = transf.transform_data(points, self.input_transf)
         else:
             transf_points = points
-        #normalize
+
+        # Divide each parameter by the std of the training data
         if self.stdize:
             std_transf = ['stdize' for dim in self.ndim]
             std_values_for_points = np.std(transf_points, axis=0)  # record the stds
@@ -149,7 +150,8 @@ class SimpleKernelDensityEstimation:
         else:
             std_values_for_points = None
             std_points = transf_points
-        #rescale
+
+        # Rescale each parameter
         if self.rescale is not None:
             transf_data = transf.transform_data(std_points, self.rescale)
         else:
@@ -169,7 +171,7 @@ class SimpleKernelDensityEstimation:
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
-            #stdardize 
+            #standardize 
             if self.stdize is not None:
                 Jacobian_std_factor =  transf.apply_transf(input_Jacobian,  'stdize') 
             else:
