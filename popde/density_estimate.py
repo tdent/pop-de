@@ -108,7 +108,7 @@ class SimpleKernelDensityEstimation:
             self.transf_data = self.data
 
         if self.stdize:
-            std_transf = ['stdize'] *self.ndim
+            std_transf = ['stdize'] * self.ndim
             self.stds = np.std(self.transf_data, axis=0)  # record the stds
             self.std_data = transf.transform_data(self.transf_data, std_transf)
         else:
