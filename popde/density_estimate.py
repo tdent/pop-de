@@ -115,9 +115,7 @@ class SimpleKernelDensityEstimation:
             self.std_data = self.transf_data
 
         if self.rescale is not None:
-            print("self tests tran, rescale", self.input_transf, self.rescale)
             self.kde_data = transf.transform_data(self.std_data, self.rescale)
-            print("rescaling done")
         else:
             self.kde_data = self.std_data
 
@@ -151,8 +149,7 @@ class SimpleKernelDensityEstimation:
 
         # Rescale each parameter
         if self.rescale is not None:
-            transf_data = transf.transform_data(std_points, self.rescale)
-            
+            transf_data = transf.transform_data(std_points, self.rescale)       
         else:
             transf_data = std_points
 
@@ -170,14 +167,13 @@ class SimpleKernelDensityEstimation:
             else:
                 raise ValueError(f"Invalid transformation option at index {i}: {option}")
 
-            #standardize 
+            #standardize using stds of training data 
             if self.stdize:
-                print(self.stdize)
                 Jacobian_std_factor = self.stds[i]
             else:
                 Jacobian_std_factor = 1.0
 
-            #rescale
+            #rescale based on self.rescale list in each dimension
             if self.rescale is not None:
                 Jacobian_rescale_factor = self.rescale[i]
             else:
