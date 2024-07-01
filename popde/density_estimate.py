@@ -171,7 +171,7 @@ class SimpleKernelDensityEstimation:
 
             #stdardize 
             if self.stdize is not None:
-                Jacobian_std_factor =  1.0/np.std(input_Jacobian) 
+                Jacobian_std_factor =  transf.apply_transf(input_Jacobian,  'stdize') 
             else:
                 Jacobian_std_factor = 1.0
 
