@@ -144,9 +144,7 @@ class SimpleKernelDensityEstimation:
 
         # Divide each parameter by the std of the training data
         if self.stdize:
-            std_transf = ['stdize' for dim in self.ndim]
-            std_values_for_points = np.std(transf_points, axis=0)  # record the stds
-            std_points = transf.transform_data(transf_points, std_transf)
+            std_points = transf.transform_data(transf_points, 1.0/self.stds)
         else:
             std_values_for_points = None
             std_points = transf_points
