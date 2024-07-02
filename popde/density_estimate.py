@@ -109,17 +109,76 @@ class SimpleKernelDensityEstimation:
             self.transf_data = self.data
 
         if self.stdize:
-            std_transf = ['stdize' for dim in self.ndim]
+            std_transf = ['stdize'] * self.ndim
             self.stds = np.std(self.transf_data, axis=0)  # record the stds
             self.std_data = transf.transform_data(self.transf_data, std_transf)
         else:
-            self.stds = None
             self.std_data = self.transf_data
 
         if self.rescale is not None:
             self.kde_data = transf.transform_data(self.std_data, self.rescale)
         else:
             self.kde_data = self.std_data
+
+
+    def evaluate_with_transf(self, points):
+        """
+        Transforms the input points in the same way as the KDE training data,
+        evaluates the KDE on the transformed points and adjusts the KDE
+        values by the Jacobian of the transformations.
+
+        Parameters:
+        -----------
+        points : array-like, shape (n_samples, n_features)
+            The original parameter space points to be transformed and evaluated.
+
+        Returns:
+        --------
+        kde_vals : array-like, shape (n_samples,)
+        The KDE values adjusted by the Jacobian of the transformations.
+        """
+        # Initial transformation
+        if self.input_transf is not None:
+            transf_points = transf.transform_data(points, self.input_transf)
+        else:
+            transf_points = points
+
+        # Divide each parameter by the std of the training data
+        if self.stdize:
+            std_points = transf.transform_data(transf_points, 1. / self.stds)
+        else:
+            std_points = transf_points
+
+        # Rescaling
+        if self.rescale is not None:
+            transf_data = transf.transform_data(std_points, self.rescale)       
+        else:
+            transf_data = std_points
+
+        # Evaluate kde on transform points
+        kde_vals = self.evaluate(transf_data)
+
+        # Jacobian of transforms for each dimension
+        for i, option in enumerate(self.input_transf):
+            if option in['log', 'ln']:
+                input_Jacobian = 1. / points[:, i]
+            elif option == 'exp':
+                input_Jacobian = np.exp(points[:, i])
+            elif option in ('none', 'None'):
+                input_Jacobian = 1. 
+            else:
+                raise ValueError(f"Invalid transformation option at index {i}: {option}")
+
+            # Jacobian for training data standardization
+            std_Jacobian = self.stds[i] if self.stdize else 1.
+
+            # Jacobian for rescaling factor
+            rescale_Jacobian = self.rescale[i] if self.rescale is not None else 1.
+
+            kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian 
+
+        return kde_vals
+
 
     def fit(self):
         """
