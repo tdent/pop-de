@@ -200,6 +200,22 @@ class SimpleKernelDensityEstimation:
         self.bandwidth = bandwidth
         self.fit()
 
+    def calc_ndim_bandwidth(self, method='oned_isj'):
+        """
+        Calculate an array of bandwidths for the transformed data, one bw per dimension
+        Assumes a direct (plug-in or comparable) method rather than optimization
+        """
+        nd_bws = np.zeros(self.ndim)
+        
+        # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
+        if method == 'oned_isj':
+            from KDEpy.bw_selection import improved_sheather_jones as isj
+            for i, col in enumerate(self.kde_data.T):
+                nd_bws[i] = isj(col)  # Weighting is also possible, not implemented atm
+            return nd_bws
+        else:
+            raise ValueError("Sorry, general bw calculations other than 1d ISJ are not supported")
+
     def evaluate(self, points):
         """
         Evaluate the KDE allowing for different backends
