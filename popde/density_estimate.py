@@ -354,11 +354,7 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
     using KDEpy, allowing for variable per-point bandwidth and independent
-    rescaling of each dimension
-
-    Methods:
-    --------
-    TBA
+    rescaling of each dimension, i.e. a general diagonal bandwidth matrix.
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
                  backend='KDEpy', bandwidth=1., dim_names=None,
