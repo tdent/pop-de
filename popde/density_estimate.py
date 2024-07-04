@@ -120,7 +120,6 @@ class SimpleKernelDensityEstimation:
         else:
             self.kde_data = self.std_data
 
-
     def evaluate_with_transf(self, points):
         """
         Transforms the input points in the same way as the KDE training data,
@@ -178,7 +177,6 @@ class SimpleKernelDensityEstimation:
             kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian 
 
         return kde_vals
-
 
     def fit(self):
         """
@@ -362,6 +360,30 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
     --------
     TBA
     """
-    % WIP
-    pass
-    
+    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
+                 backend='KDEpy', bandwidth=1., dim_names=None,
+                 bandwidth_method='oned_isj')
+        """
+        bandwidth method: string
+           Name of method to get bandwidths for each dimension of the KDE
+
+        A general diagonal covariance Gaussian kernel can be written 
+          K(x - X) = const. * (h_1 h_2 ...)^(-1) exp(-(x - X)^T . diag(h_1^2, h_2^2, ...)^(-1) . (x - X) / 2)
+        This may be implemented by changing variables to w_i = x_i / h_i and 
+        using a unit kernel matrix :
+          K(w - W) = const. * exp(-(w - W)^T . diag(1, 1, ...) . (w - W) / 2).
+        More generally, the kernel in 'w' units should be proportional to the
+        unit matrix (e.g. it may vary between data points).
+        """
+        # Check compatibility of input options
+        if stdize:
+            raise ValueError("Can't standardize variables for this class!")
+        if rescale is not None:
+            raise ValueError("Can't specify rescaling for this class!")
+
+        # Use bandwidth formula to rescale dimensions
+        self.rescale = 1. / self.calc_ndim_bandwidth(bandwidth_method)
+
+        # Keep input bandwidth (may be variable/adaptive) and proceed
+        super().__init__(data, input_transf, stdize, self.rescale,
+                         backend, bandwidth, dim_names)
