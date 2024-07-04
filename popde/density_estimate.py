@@ -328,11 +328,11 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
 
     Methods:
     --------
-    check_dimensionality():
-        check if the data matches the dimensions of KDE.
+    fit_KDEpy():
+        Set up KDE with a general per-point bandwidth using KDEpy.
 
-    evaluate(points):
-        Evaluate the KDE at given data points.
+    evaluate_KDEpy(points):
+        Evaluate the KDE.
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
                  backend='KDEpy', bandwidth=1., dim_names=None):
@@ -351,3 +351,17 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
 
         return density_values
 
+
+class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
+    """
+    Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
+    using KDEpy, allowing for variable per-point bandwidth and independent
+    rescaling of each dimension
+
+    Methods:
+    --------
+    TBA
+    """
+    % WIP
+    pass
+    
