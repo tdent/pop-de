@@ -16,7 +16,7 @@ class SimpleKernelDensityEstimation:
         Evaluate the KDE at given data points.
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='scipy', bandwidth=1., dim_names=None):
+                 backend='scipy', bandwidth=1., dim_names=None, weights=None):
         """
         data: array-like, shape (n_samples, n_features)
             Data points defining kernel positions
@@ -31,6 +31,9 @@ class SimpleKernelDensityEstimation:
             backend : String, Processing method to do KDE calculation
             bandwidth : Float or array of float, bandwidth of kernels used for smoothing
             dim_names : Sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
+            weights : array_like, optional None (default)
+                      weights of datapoints so  must be the same shape 
+                      as n_samples. If None (default), the samples are assumed to be                        equally weighted 
 
         Example
         --------
@@ -73,6 +76,18 @@ class SimpleKernelDensityEstimation:
         self.dim_names = dim_names
         if dim_names is not None:
             self.check_dimensionality()
+
+        self.weights = weights
+        if self.weights is not None:
+            #check the array
+            self._weights = atleast_1d(weights).astype(float)
+            #normalize weights [sum(weights)=1]
+            self._weights /= sum(self._weights)
+            if self.weights.ndim != 1:
+                raise ValueError("weights should be one-dimensional.")
+            if len(self.weights) != self.data.shape[1]:
+                raise ValueError("weights should be of length of input data")
+
 
         # Do transformation, standardize and rescale input data
         self.prepare_data()
@@ -191,7 +206,7 @@ class SimpleKernelDensityEstimation:
         from scipy.stats import gaussian_kde
 
         # scipy takes data with shape (n_dimensions, n_samples)
-        self.kernel_estimate = gaussian_kde(self.kde_data.T, bw_method=self.bandwidth)
+        self.kernel_estimate = gaussian_kde(self.kde_data.T, bw_method=self.bandwidth, weights=self.weights)
 
     def set_bandwidth(self, bandwidth):
         """
@@ -335,7 +350,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         Evaluate the KDE at given data points.
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='KDEpy', bandwidth=1., dim_names=None):
+                 backend='KDEpy', bandwidth=1., dim_names=None, weights=None):
         # Same initialization as parent class but default to KDEpy
         super().__init__(data, input_transf, stdize, rescale,
                          backend, bandwidth, dim_names)  # Arguments stay in same order
@@ -344,7 +359,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         from KDEpy.TreeKDE import TreeKDE
 
         # Bandwidth may be array-like with size n_samples
-        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.kde_data)
+        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.kde_data, weights=self.weights)
 
     def evaluate_KDEpy(self, points):
         density_values = self.kernel_estimate.evaluate(points)
