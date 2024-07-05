@@ -79,15 +79,14 @@ class SimpleKernelDensityEstimation:
 
         self.weights = weights
         if self.weights is not None:
-            #check the array
-            self._weights = atleast_1d(weights).astype(float)
-            #normalize weights [sum(weights)=1]
-            self._weights /= sum(self._weights)
+            # Check the array
+            self.weights = atleast_1d(weights).astype(float)
             if self.weights.ndim != 1:
                 raise ValueError("weights should be one-dimensional.")
             if len(self.weights) != self.data.shape[1]:
                 raise ValueError("weights should be of length of input data")
-
+            # Normalize to sum to  1
+            self.weights /= self.weights.sum()
 
         # Do transformation, standardize and rescale input data
         self.prepare_data()
