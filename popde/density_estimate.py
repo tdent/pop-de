@@ -357,7 +357,7 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
     rescaling of each dimension, i.e. a general diagonal bandwidth matrix.
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='KDEpy', bandwidth=1., dim_names=None,
+                 backend='KDEpy', bandwidth=1., dim_names=None, weights=None,
                  bandwidth_method='oned_isj')
         """
         bandwidth method: string
@@ -382,4 +382,4 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
 
         # Keep input bandwidth (may be variable/adaptive) and proceed
         super().__init__(data, input_transf, stdize, self.rescale,
-                         backend, bandwidth, dim_names)
+                         backend, bandwidth, dim_names, weights)
