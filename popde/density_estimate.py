@@ -31,7 +31,8 @@ class SimpleKernelDensityEstimation:
             backend : String, Processing method to do KDE calculation
             bandwidth : Float or array of float, bandwidth of kernels used for smoothing
             dim_names : Sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
-            weights : array_like, weights for data points ; if None, the samples are weighted equally
+            weights : array_like, weights for data points
+                If None, the samples are weighted equally
 
         Example
         --------
