@@ -31,9 +31,7 @@ class SimpleKernelDensityEstimation:
             backend : String, Processing method to do KDE calculation
             bandwidth : Float or array of float, bandwidth of kernels used for smoothing
             dim_names : Sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
-            weights : array_like, optional None (default)
-                      weights of datapoints so  must be the same shape 
-                      as n_samples. If None (default), the samples are assumed to be                        equally weighted 
+            weights : array_like, weights for data points ; if None, the samples are weighted equally
 
         Example
         --------
@@ -85,7 +83,7 @@ class SimpleKernelDensityEstimation:
                 raise ValueError("weights should be one-dimensional.")
             if len(self.weights) != self.data.shape[1]:
                 raise ValueError("weights should be of length of input data")
-            # Normalize to sum to  1
+            # Normalize to sum to 1
             self.weights /= self.weights.sum()
 
         # Do transformation, standardize and rescale input data
@@ -327,7 +325,7 @@ class SimpleKernelDensityEstimation:
 
         # Create the contour plot
         zz = z.reshape(xx.shape)
-        fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title=f'KDE sliced along {slice_dims} at {slice_values})')
+        fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title=f'KDE sliced along {slice_dims} at {slice_values})', show_plot=True)
 
         if file_name is not None:
             fig.savefig(file_name)
