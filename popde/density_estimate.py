@@ -33,7 +33,7 @@ class SimpleKernelDensityEstimation:
             backend : String, Processing method to do KDE calculation
             bandwidth : Float or array of float, bandwidth of kernels used for smoothing
             dim_names : Sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
-            fit : Boolean, whether to fit the KDE when initializing a class instance
+            do_fit : Boolean, whether to fit the KDE when initializing a class instance
 
         Example
         --------
@@ -78,6 +78,17 @@ class SimpleKernelDensityEstimation:
         self.bandwidth = bandwidth
         self.dim_names = dim_names
         self.check_dimensionality()
+
+        self.weights = weights
+        if self.weights is not None:
+            # Check the array
+            self.weights = np.atleast_1d(weights).astype(float)
+            if self.weights.ndim != 1:
+                raise ValueError("weights should be one-dimensional.")
+            if len(self.weights) != self.data.shape[0]:
+                raise ValueError("weights should be of length of input data")
+            # Normalize to sum to 1
+            self.weights /= self.weights.sum()
 
         # Do transformation, standardize and rescale input data
         self.prepare_data()

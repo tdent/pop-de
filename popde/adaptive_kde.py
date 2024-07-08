@@ -36,13 +36,13 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     print(density_values)
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None):
+                 backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None, weights=None):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
 
         # Set up initial KDE with fixed bandwidth
         super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names)
+                         backend, bandwidth, dim_names, weights)
 
         # Compute pilot kde values at input points
         self.pilot_values = self.evaluate(self.kde_data)
