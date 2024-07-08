@@ -79,10 +79,10 @@ class SimpleKernelDensityEstimation:
         self.weights = weights
         if self.weights is not None:
             # Check the array
-            self.weights = atleast_1d(weights).astype(float)
+            self.weights = np.atleast_1d(weights).astype(float)
             if self.weights.ndim != 1:
                 raise ValueError("weights should be one-dimensional.")
-            if len(self.weights) != self.data.shape[1]:
+            if len(self.weights) != self.data.shape[0]:
                 raise ValueError("weights should be of length of input data")
             # Normalize to sum to 1
             self.weights /= self.weights.sum()
@@ -351,7 +351,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
                  backend='KDEpy', bandwidth=1., dim_names=None, weights=None):
         # Same initialization as parent class but default to KDEpy
         super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names)  # Arguments stay in same order
+                         backend, bandwidth, dim_names, weights)  # Arguments stay in same order
 
     def fit_KDEpy(self):
         from KDEpy.TreeKDE import TreeKDE
