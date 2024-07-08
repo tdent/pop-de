@@ -358,7 +358,7 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
     """
     def __init__(self, data, input_transf=None, stdize=False, rescale=None,
                  backend='KDEpy', bandwidth=1., dim_names=None, weights=None,
-                 bandwidth_method='oned_isj')
+                 bandwidth_method='oned_isj'):
         """
         bandwidth method: string
            Name of method to get bandwidths for each dimension of the KDE
