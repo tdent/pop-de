@@ -351,7 +351,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
                  backend='KDEpy', bandwidth=1., dim_names=None, weights=None):
         # Same initialization as parent class but default to KDEpy
         super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names)  # Arguments stay in same order
+                         backend, bandwidth, dim_names, weights)  # Arguments stay in same order
 
     def fit_KDEpy(self):
         from KDEpy.TreeKDE import TreeKDE
