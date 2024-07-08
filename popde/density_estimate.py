@@ -15,13 +15,15 @@ class SimpleKernelDensityEstimation:
     evaluate(points):
         Evaluate the KDE at given data points.
     """
-    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='scipy', bandwidth=1., dim_names=None, weights=None):
+    def __init__(self, data, weights=None, input_transf=None, stdize=False,
+                 rescale=None, backend='scipy', bandwidth=1., dim_names=None,
+                 do_fit=True):
         """
         data: array-like, shape (n_samples, n_features)
             Data points defining kernel positions
             Each row is a point, each column is a parameter.
         kwargs:
+            weights : Array-like of floats, per-point KDE weights
             input_transf : None or sequence of strings, eg ('log', 'none', 'log')
               describing transformations of data before KDE calculation
             stdize : Boolean, whether to standardize all data dimensions
@@ -31,8 +33,7 @@ class SimpleKernelDensityEstimation:
             backend : String, Processing method to do KDE calculation
             bandwidth : Float or array of float, bandwidth of kernels used for smoothing
             dim_names : Sequence of dimension names, e.g. ('m1', 'z', 'chi_eff')
-            weights : array_like, weights for data points
-                If None, the samples are weighted equally
+            do_fit : Boolean, whether to fit the KDE when initializing a class instance
 
         Example
         --------
@@ -66,6 +67,9 @@ class SimpleKernelDensityEstimation:
 
         self.data = np.asarray(data)
         self.ndim = self.data.shape[1]
+        self.weights = np.atleast_1d(weights).astype(float)
+        if len(self.weights) != self.data.shape[0]:
+            raise ValueError("Weights must have same length as data points")
         self.input_transf = input_transf
         self.stdize = stdize
         self.rescale = rescale
@@ -73,8 +77,7 @@ class SimpleKernelDensityEstimation:
         self.backend = backend
         self.bandwidth = bandwidth
         self.dim_names = dim_names
-        if dim_names is not None:
-            self.check_dimensionality()
+        self.check_dimensionality()
 
         self.weights = weights
         if self.weights is not None:
@@ -92,7 +95,8 @@ class SimpleKernelDensityEstimation:
 
         self.kernel_estimate = None
         # Initialize the KDE
-        self.fit()
+        if do_fit:
+            self.fit()
 
     def check_dimensionality(self):
         """
@@ -132,7 +136,6 @@ class SimpleKernelDensityEstimation:
             self.kde_data = transf.transform_data(self.std_data, self.rescale)
         else:
             self.kde_data = self.std_data
-
 
     def evaluate_with_transf(self, points):
         """
@@ -192,7 +195,6 @@ class SimpleKernelDensityEstimation:
 
         return kde_vals
 
-
     def fit(self):
         """
         General fit method allowing for different backends
@@ -204,7 +206,11 @@ class SimpleKernelDensityEstimation:
         from scipy.stats import gaussian_kde
 
         # scipy takes data with shape (n_dimensions, n_samples)
-        self.kernel_estimate = gaussian_kde(self.kde_data.T, bw_method=self.bandwidth, weights=self.weights)
+        self.kernel_estimate = gaussian_kde(
+            self.kde_data.T,
+            bw_method=self.bandwidth,
+            weights=self.weights
+        )
 
     def set_bandwidth(self, bandwidth):
         """
@@ -341,26 +347,70 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
 
     Methods:
     --------
-    check_dimensionality():
-        check if the data matches the dimensions of KDE.
+    fit_KDEpy():
+        Set up KDE with a general per-point bandwidth using KDEpy.
 
-    evaluate(points):
-        Evaluate the KDE at given data points.
+    evaluate_KDEpy(points):
+        Evaluate the KDE.
     """
-    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='KDEpy', bandwidth=1., dim_names=None, weights=None):
+    def __init__(self, data, weights=None, input_transf=None, stdize=False,
+                 rescale=None, backend='KDEpy', bandwidth=1., dim_names=None,
+                 do_fit=True):
         # Same initialization as parent class but default to KDEpy
-        super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names, weights)  # Arguments stay in same order
+        # Arguments stay in same order
+        super().__init__(data, weights, input_transf, stdize,
+                         rescale, backend, bandwidth, dim_names, do_fit)
 
     def fit_KDEpy(self):
         from KDEpy.TreeKDE import TreeKDE
 
         # Bandwidth may be array-like with size n_samples
-        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(self.kde_data, weights=self.weights)
+        self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(
+            self.kde_data,
+            weights=self.weights
+        )
 
     def evaluate_KDEpy(self, points):
         density_values = self.kernel_estimate.evaluate(points)
 
         return density_values
 
+
+class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
+    """
+    Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
+    using KDEpy, allowing for variable per-point bandwidth and independent
+    rescaling of each dimension, i.e. a general diagonal bandwidth matrix.
+    """
+    def __init__(self, data, weights=None, input_transf=None, stdize=False,
+                 rescale=None, backend='KDEpy', bandwidth=1., dim_names=None,
+                 do_fit=False, bandwidth_method='oned_isj'):
+        """
+        bandwidth method: string
+           Name of method to get bandwidths for each dimension of the KDE
+
+        A general diagonal covariance Gaussian kernel can be written 
+          K(x - X) = const. * (h_1 h_2 ...)^(-1) exp(-(x - X)^T . diag(h_1^2, h_2^2, ...)^(-1) . (x - X) / 2)
+        This may be implemented by changing variables to w_i = x_i / h_i and 
+        using a unit kernel matrix :
+          K(w - W) = const. * exp(-(w - W)^T . diag(1, 1, ...) . (w - W) / 2).
+        More generally, the kernel in 'w' units should be proportional to the
+        unit matrix (e.g. it may vary between data points).
+        """
+        # Check compatibility of input options
+        if stdize:
+            raise ValueError("Can't standardize variables for this class!")
+        if rescale is not None:
+            raise ValueError("Can't specify rescaling for this class!")
+
+        # Initialize as for KDEpy, but by default do not fit KDE to begin with
+        super().__init__(data, weights, input_transf, stdize,
+                         rescale, backend, bandwidth, dim_names, do_fit)
+
+        # Use bandwidth formula to rescale dimensions
+        self.rescale = 1. / self.calc_ndim_bandwidth(bandwidth_method)
+
+        # Keep input bandwidth (may be variable/adaptive) and proceed to fit KDE
+        super().__init__(data, weights, input_transf, stdize,
+                         self.rescale, backend, bandwidth, dim_names,
+                         do_fit=True)
