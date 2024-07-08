@@ -35,14 +35,15 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     density_values = density_values.reshape(XX.shape)
     print(density_values)
     """
-    def __init__(self, data, input_transf=None, stdize=False, rescale=None,
-                 backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None, weights=None):
+    def __init__(self, data, weights, input_transf=None, stdize=False,
+                 rescale=None, backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None,
+                 do_fit=True):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
 
         # Set up initial KDE with fixed bandwidth
-        super().__init__(data, input_transf, stdize, rescale,
-                         backend, bandwidth, dim_names, weights)
+        super().__init__(data, weights, input_transf, stdize,
+                         rescale, backend, bandwidth, dim_names, do_fit)
 
         # Compute pilot kde values at input points
         self.pilot_values = self.evaluate(self.kde_data)
@@ -93,7 +94,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             The new value for the adaptive parameter alpha.
         """
         self.alpha = new_alpha
-        # Update local bandwidths
+        # Update local bandwidths (pilot values remain unchanged)
         self.set_per_point_bandwidth(self.pilot_values)       
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
@@ -111,6 +112,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         self.set_bandwidth(new_global_bw)
         # Update pilot_values using new global bandwidth
         self.pilot_values = self.evaluate(self.kde_data)
+        
         # Set alpha and calculate per-point bandwidths 
         self.set_alpha(new_alpha)
 
