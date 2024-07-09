@@ -230,7 +230,8 @@ class SimpleKernelDensityEstimation:
         if method == 'oned_isj':
             from KDEpy.bw_selection import improved_sheather_jones as isj
             for i, col in enumerate(self.kde_data.T):
-                nd_bws[i] = isj(col)  # Weighting is also possible, not implemented atm
+                # KDEpy function requires an array of shape (n_samples, 1)
+                nd_bws[i] = isj(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
             return nd_bws
         else:
             raise ValueError("Sorry, general bw calculations other than 1d ISJ are not supported")
