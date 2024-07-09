@@ -147,8 +147,9 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         self.log_param = paramflag
         self.optbw = None
         self.optalpha = None
+        self.fom_val  = None
 
-    def train_eval_kde(self, x, x_grid, bandwidth, alpha, ret_kde=False):
+    def train_eval_kde(self, x, x_eval, bandwidth, alpha, ret_kde=False):
         """Kernel Density Estimation with awkde
         inputs:
         x: training data [n_dimension]
@@ -160,7 +161,7 @@ class AdaptiveKDELeaveOneOutCrossValidation():
             if True kde will be output with estimated kde-values
         """
         from awkde import GaussianKDE
-        kde = GaussianKDE(glob_bw=gl_bandwidth)
+        kde = GaussianKDE(glob_bw=gl_bandwidth, alpha=alpha)
         kde.fit(x[:, np.newaxis])
         # Evaluate KDE at given points
         if isinstance(x_eval, (list, tuple, np.ndarray)) == False:
@@ -172,15 +173,16 @@ class AdaptiveKDELeaveOneOutCrossValidation():
             return kde, y
         return y
 
-    def loocv(self, sample, bw, alpha):
+    def loocv(self, bw, alpha):
         """
+        we use self.data 
         Calculate likelihood FOM using leave one out cross validation for
         finding best choice of bandwidth and alpha
         """
         fom = 0.
-        for i in range(len(sample)):
+        for i in range(len(self.data)):
             leave_one_sample, miss_sample = np.delete(sample, i), sample[i]
-            y = train_eval_kde(leave_one_sample, miss_sample, bw, alpha)
+            y = self.train_eval_kde(leave_one_sample, miss_sample, bw, alpha)
             fom += np.log(y)
         return fom
 
@@ -196,10 +198,12 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         fom = {}  # Dictionary holding optimization figure of merit
         for bw in bwgrid:
             for alp in alphagrid:
-                fom[(gbw, alp)] = loocv(samples, bw, alp)
+                fom[(gbw, alp)] = self.loocv(bw, alp)
+        import operator
         optvalues = max(fom.items(), key=operator.itemgetter(1))[0]
         self.optbw, self.optalpha = optvalues[0], optvalues[1]
+        self.fom_val = fom[(self.optbw, self.optalpha)]
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
-        return kdeval, self.optbw, self.optalpha
+        return self.fom_val, self.optbw, self.optalpha
 
