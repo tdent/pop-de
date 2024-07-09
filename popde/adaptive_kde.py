@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
-
+from sklearn.model_selection import KFold, LeaveOneOut
 
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
@@ -115,6 +115,48 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         
         # Set alpha and calculate per-point bandwidths 
         self.set_alpha(new_alpha)
+
+
+class KDEOptimization(VariableBwKDEPy):
+    def __init__(self, data, bandwidth_options, alpha_options):
+        super().__init__(data,   .....)
+        self.alpha_options = alpha_options
+        self.bandwidth_options = bandwidth_options
+
+    def loo_cv_score(self, bandwidth_val, alpha_val):
+        loo = LeaveOneOut() #sklearn way
+        fom = 0.0
+        for train_index, test_index in loo.split(self.data):
+            train_data, test_data = self.data[train_index], self.data[test_index]
+            #kde evaluate here with KDEpy
+            kde = SimpleKernelDensityEstimation(train_data,...) #fix it
+            fom += kde.evaluate(test_data)  
+    return np.mean(fom)
+
+    def optimize_parameters(self):
+        best_score = float('inf')
+        best_params = {'bandwidth': None, 'alpha': None}
+
+        for alpha in self.alph:
+            for bandwidth in self.bandwidth_options:
+                score = self.loo_cv_score(bandwidth, alpha)
+
+                if score < best_score:
+                    best_score = score
+                    best_params['bandwidth'] = bandwidth
+                    best_params['alpha'] = alpha
+
+    return best_params, best_score
+
+    def kfold_cv_score(self, bandwidth, alpha):
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
+        fom = []
+
+        for train_index, test_index in kf.split(self.data):
+            train_data, test_data = self.data[train_index], self.data[test_index]
+            kde = SimpleKernelDensityEstimation(train_data,...) #fix it
+            fom.append(kde.evaluate(test_data).sum())
+    return sum(fom)
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
