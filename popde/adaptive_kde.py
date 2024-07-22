@@ -119,10 +119,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
 class KDEOptimization(AdaptiveBwKDE):
     """
-    Given grid of bandwidth and alpha values 
-    find optimized values using cross 
-    valitation with figure of merit
-    based on loglikelihood criteria 
+    Optimize bandwidth and alpha by grid search using
+    cross validation with a log likelihood figure of merit 
     """
     def __init__(self, data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True):
         self.alpha_options = alpha_options
