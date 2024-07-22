@@ -67,9 +67,6 @@ class SimpleKernelDensityEstimation:
 
         self.data = np.asarray(data)
         self.ndim = self.data.shape[1]
-        self.weights = np.atleast_1d(weights).astype(float)
-        if len(self.weights) != self.data.shape[0]:
-            raise ValueError("Weights must have same length as data points")
         self.input_transf = input_transf
         self.stdize = stdize
         self.rescale = rescale
