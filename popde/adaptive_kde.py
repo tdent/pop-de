@@ -194,11 +194,11 @@ class KDEOptimization(AdaptiveBwKDE):
                     ax.plot(self.alpha_options, FOMlist, 
                             label='{0:.3f}'.format(float(bw)))
                     if optbw == bw:
-                        ax.plot(optalpha, maxFOM, 'ko', linewidth=10, 
+                        ax.plot(optalpha, best_score, 'ko', linewidth=10, 
                                 label=r'$\alpha={0:.3f}, bw= {1:.3f}$'.format(optalpha, float(optbw)))
                 else:
                     ax.plot(alphagrid, FOMlist, label='{}'.format(bw))
-                    ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
+                    ax.plot(optalpha, best_score, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
             # add legends on top of plot in multicolumns
