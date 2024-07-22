@@ -163,7 +163,6 @@ class KDEOptimization(AdaptiveBwKDE):
         return sum(fom)
 
     def optimize_parameters(self, method='loo_cv', fom_plot_name=None):
-        #best_score = float('inf')
         best_params = {'bandwidth': None, 'alpha': None}
 
         FOM= {}
@@ -175,15 +174,14 @@ class KDEOptimization(AdaptiveBwKDE):
                     score = self.loo_cv_score(bandwidth, alpha)
 
                 FOM[(bandwidth, alpha)] = score
-                #if score < best_score:
-                #    best_score = score
-                #    best_params['bandwidth'] = bandwidth
-                #    best_params['alpha'] = alpha
 
         optval = max(FOM.items(), key=operator.itemgetter(1))[0]
         optbw, optalpha  = optval[0], optval[1]
-        maxFOM = FOM[(optbw, optalpha)]
-
+        best_score = FOM[(optbw, optalpha)]
+        #set self.bandwidth  and self.alpha  as optimized values
+        self.bandwidth  = optbw
+        self.alpha  = optalpha
+        best_params = {'bandwidth': optbw, 'alpha': optalpha}
         
         if fom_plot_name is not None:
             import matplotlib.pyplot as plt
@@ -208,12 +206,7 @@ class KDEOptimization(AdaptiveBwKDE):
             plt.savefig(fom_plot_name+".png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
             plt.close()
 
-        #set self bandwidth  and alpha
-        self.bandwidth  = optbw
-        self.alpha  = optalpha
-        best_params = {'bandwidth': optbw, 'alpha': optalpha}
-
-        return  best_params, maxFOM #best_params, best_score
+        return  best_params, best_score
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
