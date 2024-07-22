@@ -183,10 +183,7 @@ class KDEOptimization(AdaptiveBwKDE):
 
         
         if fom_plot==True:
-            import operator
-            optval = max(FOM.items(), key=operator.itemgetter(1))[0]
-            optbw, optalpha  = optval[0], optval[1]
-            maxFOM = FOM[(optbw, optalpha)]
+            import matplotlib.pyplot as plt
 
             fig = plt.figure(figsize=(12,8))
             ax = fig.add_subplot(111)
