@@ -201,7 +201,7 @@ class KDEOptimization(AdaptiveBwKDE):
             lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,1.25), ncol =6, fancybox=True, shadow=True, fontsize=8)
         #plt.ylim(maxFOM -5 , maxFOM +6)
             plt.savefig("FOMfortwoDsourcecase.png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
-            plt.show()
+            plt.close()
 
         #set self bandwidth  and alpha
         self.bandwidth  = optbw
