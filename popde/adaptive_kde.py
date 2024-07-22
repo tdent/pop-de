@@ -46,7 +46,6 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         # Set up initial KDE with fixed bandwidth
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, dim_names, do_fit)
-        print("in adaptive KDE:", dim_names)
         # Compute pilot kde values at input points
         self.pilot_values = self.evaluate(self.kde_data)
         # Calculate per-point bandwidths and apply them to fit adaptive KDE
@@ -159,7 +158,6 @@ class KDEOptimization(AdaptiveBwKDE):
         return sum(fom)
 
     def optimize_parameters(self, method='loo_cv', fom_plot=False):
-        print("in optimization now")
         best_score = float('inf')
         best_params = {'bandwidth': None, 'alpha': None}
 
@@ -169,7 +167,6 @@ class KDEOptimization(AdaptiveBwKDE):
                 if method=='kfold_cv':
                     score = self.kfold_cv_score(bandwidth, alpha, n_splits=2)
                 else:
-                    print("doing loocv")
                     score = self.loo_cv_score(bandwidth, alpha)
 
                 FOM[(bandwidth, alpha)] = score
