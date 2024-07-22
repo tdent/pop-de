@@ -2,7 +2,6 @@ import numpy as np
 import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
-from sklearn.model_selection import KFold, LeaveOneOut
 import matplotlib.pyplot as plt
 
 
@@ -132,6 +131,7 @@ class KDEOptimization(AdaptiveBwKDE):
                          rescale, backend, bandwidth, alpha, dim_names, do_fit)
 
     def loo_cv_score(self, bandwidth_val, alpha_val):
+        from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() #sklearn way
         fom = 0.0
         for train_index, test_index in loo.split(self.data):
@@ -148,6 +148,7 @@ class KDEOptimization(AdaptiveBwKDE):
         """
         to do: how to choose and use s_split in init
         """
+        from sklearn.model_selection import KFold
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
         fom = []
         for train_index, test_index in kf.split(self.data):
