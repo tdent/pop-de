@@ -117,19 +117,21 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         self.set_alpha(new_alpha)
 
 
-class KDEOptimization(VariableBwKDEPy):
-    def __init__(self, data, bandwidth_options, alpha_options):
-        super().__init__(data,   .....)
+class KDEOptimization(AdaptiveBwKDE):
+    def __init__(data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True)):
+        
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
 
+        super().__init__(data, weights, input_transf, stdize,
+                         rescale, backend, bandwidth, dim_names, do_fit)
     def loo_cv_score(self, bandwidth_val, alpha_val):
         loo = LeaveOneOut() #sklearn way
         fom = 0.0
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             #kde evaluate here with KDEpy
-            kde = SimpleKernelDensityEstimation(train_data,...) #fix it
+            kde = AdaptiveBwKDE(train_data, bandwidth=bandwidth_val,alpha=alpha_val)
             fom += kde.evaluate(test_data)  
     return np.mean(fom)
 
@@ -154,9 +156,63 @@ class KDEOptimization(VariableBwKDEPy):
 
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            kde = SimpleKernelDensityEstimation(train_data,...) #fix it
+            kde = AdaptiveBwKDE(train_data, bandwidth=bandwidth_val,alpha=alpha_val)
             fom.append(kde.evaluate(test_data).sum())
     return sum(fom)
+
+    def optimize_parameters(self, method='loo_cv', fom_plot=False):
+        best_score = float('inf')
+        best_params = {'bandwidth': None, 'alpha': None}
+
+        FOM= {}
+        for bandwidth in self.bandwidth_options:
+            for alpha in self.alpha_options:
+                if method='kfold_cv':
+                    score = kfold_cv_score(bandwidth, alpha)
+                else:
+                    score = self.loo_cv_score(bandwidth, alpha)
+
+                FOM[(bandwidth, alpha)] = score
+                if score < best_score:
+                    best_score = score
+                    best_params['bandwidth'] = bandwidth
+                    best_params['alpha'] = alpha
+
+        
+        #plot
+        if fom_plot==True:
+            import operator
+            optval = max(FOM.items(), key=operator.itemgetter(1))[0]
+            optbw, optalpha  = optval[0], optval[1]
+            maxFOM = FOM[(optbw, optalpha)]
+
+            fig = plt.figure(figsize=(12,8))
+            ax = fig.add_subplot(111)
+            for bw in self.bandwidth_options:
+                FOMlist = [FOM[(bw, al)] for al in self.alpha_options]
+                if bw not in ['silverman', 'scott']:
+                    bw = float(bw) #bwchoice.astype(np.float) #for list
+                    ax.plot(self.alpha_options, FOMlist, label='{0:.3f}'.format(bw))
+                else:
+                    ax.plot(alphagrid, FOMlist, label='{}'.format(bw))
+            if optbw not in ['silverman', 'scott']::
+                ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1:.3f}$'.format(optalpha, optbw))
+            else:
+                ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
+            ax.set_xlabel(r'$\alpha$', fontsize=18)
+            ax.set_ylabel(r'$FOM$', fontsize=18)
+            handles, labels = ax.get_legend_handles_labels()
+            lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,1.25), ncol =6, fancybox=True, shadow=True, fontsize=8)
+        #plt.ylim(maxFOM -5 , maxFOM +6)
+            plt.savefig("FOMfortwoDsourcecase.png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
+            plt.close()
+
+    #set self bandwidth  and alpha
+    self.bandwidth  = optbw
+    self.alpha  = optalpha
+
+    return best_params, best_score
+
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
