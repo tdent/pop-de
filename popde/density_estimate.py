@@ -67,9 +67,6 @@ class SimpleKernelDensityEstimation:
 
         self.data = np.asarray(data)
         self.ndim = self.data.shape[1]
-        self.weights = np.atleast_1d(weights).astype(float)
-        if len(self.weights) != self.data.shape[0]:
-            raise ValueError("Weights must have same length as data points")
         self.input_transf = input_transf
         self.stdize = stdize
         self.rescale = rescale
@@ -288,9 +285,7 @@ class SimpleKernelDensityEstimation:
 
         Example:
             np.random.seed(42)
-            # Number of data points
             num_points = 1000
-            # Mean and covariance matrix
             mean = [0, 0, 0]
             covariance_matrix = [[1, 0.5, 0.3],
                                 [0.5, 1, 0.2],
@@ -298,11 +293,10 @@ class SimpleKernelDensityEstimation:
 
             # Generate 3D normal distributed data
             data = np.random.multivariate_normal(mean, covariance_matrix, num_points)
-            parameter = ['m1', 'm2', 'Mc']
-            kde = SimpleKernelDensityEstimation(sample,  dim_names=parameter)
-            # Plot a 2D contour with a slice along the 'z' dimensios
-            fig = kde.plot_2d_contour(parameter[0],parameter[1], 
-                    slice_dims=[parameter[2]], slice_values=[0], num_points=100)
+            kde = SimpleKernelDensityEstimation(sample, dim_names=['x0', 'x1', 'x2'], stdize=True)
+            # Plot a 2D contour with a slice along the 'z' dimension
+            fig = kde.plot_2d_contour(parameter[0], parameter[1], 
+                    slice_dims=['x2'], slice_values=[0.], num_points=100)
         """
         # Input checking
         if dim1 not in self.dim_names or dim2 not in self.dim_names:
@@ -328,12 +322,13 @@ class SimpleKernelDensityEstimation:
                 slice_idx = self.dim_names.index(slice_dim)
                 positions = np.insert(positions, slice_idx, slice_value, axis=1)
 
-        # Evaluate the KDE at the grid points
-        z = self.evaluate(positions)
+        # Evaluate the KDE at the grid points: nb we use the original data coordinates
+        z = self.evaluate_with_transf(positions)
 
         # Create the contour plot
         zz = z.reshape(xx.shape)
-        fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2, title=f'KDE sliced along {slice_dims} at {slice_values})')
+        fig = utils_plot.simple2Dplot(xx, yy, zz, xlabel=dim1, ylabel=dim2,
+                                      title=f'KDE sliced along {slice_dims} at {slice_values})')
 
         if file_name is not None:
             fig.savefig(file_name)
