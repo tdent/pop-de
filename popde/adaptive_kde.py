@@ -133,7 +133,7 @@ class KDEOptimization(AdaptiveBwKDE):
 
     def loo_cv_score(self, bandwidth_val, alpha_val):
         loo = LeaveOneOut() #sklearn way
-        weights = self.weights
+        fom = 0.0
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
            
@@ -158,7 +158,8 @@ class KDEOptimization(AdaptiveBwKDE):
         return sum(fom)
 
     def optimize_parameters(self, method='loo_cv', fom_plot=False):
-        best_score = float('inf')
+        import operator
+        #best_score = float('inf')
         best_params = {'bandwidth': None, 'alpha': None}
 
         FOM= {}
@@ -170,10 +171,15 @@ class KDEOptimization(AdaptiveBwKDE):
                     score = self.loo_cv_score(bandwidth, alpha)
 
                 FOM[(bandwidth, alpha)] = score
-                if score < best_score:
-                    best_score = score
-                    best_params['bandwidth'] = bandwidth
-                    best_params['alpha'] = alpha
+                #if score < best_score:
+                #    best_score = score
+                #    best_params['bandwidth'] = bandwidth
+                #    best_params['alpha'] = alpha
+
+        optval = max(FOM.items(), key=operator.itemgetter(1))[0]
+        optbw, optalpha  = optval[0], optval[1]
+        maxFOM = FOM[(optbw, optalpha)]
+
         
         if fom_plot==True:
             import operator
@@ -205,9 +211,9 @@ class KDEOptimization(AdaptiveBwKDE):
         #set self bandwidth  and alpha
         self.bandwidth  = optbw
         self.alpha  = optalpha
+        best_params = {'bandwidth': optbw, 'alpha': optalpha}
 
-        return best_params, best_score
-
+        return  best_params, maxFOM #best_params, best_score
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
