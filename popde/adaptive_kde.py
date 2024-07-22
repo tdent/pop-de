@@ -44,6 +44,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         # Set up initial KDE with fixed bandwidth
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, dim_names, do_fit)
+        #print("in adaptive KDE:", dim_names)
 
         # Compute pilot kde values at input points
         self.pilot_values = self.evaluate(self.kde_data)
@@ -118,47 +119,35 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
 
 class KDEOptimization(AdaptiveBwKDE):
-    def __init__(data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True)):
-        
+    def __init__(self, data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True):
+        print("dim_names", dim_names)
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
 
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, dim_names, do_fit)
+        print("super dim_names", dim_names)
     def loo_cv_score(self, bandwidth_val, alpha_val):
         loo = LeaveOneOut() #sklearn way
         fom = 0.0
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             #kde evaluate here with KDEpy
-            kde = AdaptiveBwKDE(train_data, bandwidth=bandwidth_val,alpha=alpha_val)
+            local_weights = np.ones_like(train_data.shape[0])
+            kde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
             fom += kde.evaluate(test_data)  
-    return np.mean(fom)
+        return np.mean(fom)
 
-    def optimize_parameters(self):
-        best_score = float('inf')
-        best_params = {'bandwidth': None, 'alpha': None}
-
-        for alpha in self.alph:
-            for bandwidth in self.bandwidth_options:
-                score = self.loo_cv_score(bandwidth, alpha)
-
-                if score < best_score:
-                    best_score = score
-                    best_params['bandwidth'] = bandwidth
-                    best_params['alpha'] = alpha
-
-    return best_params, best_score
-
-    def kfold_cv_score(self, bandwidth, alpha):
+    def kfold_cv_score(self, bandwidth_val, alpha_val):
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
         fom = []
 
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            kde = AdaptiveBwKDE(train_data, bandwidth=bandwidth_val,alpha=alpha_val)
+            local_weights = np.ones_like(train_data.shape[0])
+            kde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
             fom.append(kde.evaluate(test_data).sum())
-    return sum(fom)
+        return sum(fom)
 
     def optimize_parameters(self, method='loo_cv', fom_plot=False):
         best_score = float('inf')
@@ -167,8 +156,8 @@ class KDEOptimization(AdaptiveBwKDE):
         FOM= {}
         for bandwidth in self.bandwidth_options:
             for alpha in self.alpha_options:
-                if method='kfold_cv':
-                    score = kfold_cv_score(bandwidth, alpha)
+                if method=='kfold_cv':
+                    score = self.kfold_cv_score(bandwidth, alpha)
                 else:
                     score = self.loo_cv_score(bandwidth, alpha)
 
@@ -195,7 +184,7 @@ class KDEOptimization(AdaptiveBwKDE):
                     ax.plot(self.alpha_options, FOMlist, label='{0:.3f}'.format(bw))
                 else:
                     ax.plot(alphagrid, FOMlist, label='{}'.format(bw))
-            if optbw not in ['silverman', 'scott']::
+            if optbw not in ['silverman', 'scott']:
                 ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1:.3f}$'.format(optalpha, optbw))
             else:
                 ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
@@ -205,13 +194,13 @@ class KDEOptimization(AdaptiveBwKDE):
             lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,1.25), ncol =6, fancybox=True, shadow=True, fontsize=8)
         #plt.ylim(maxFOM -5 , maxFOM +6)
             plt.savefig("FOMfortwoDsourcecase.png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
-            plt.close()
+            plt.show()
 
-    #set self bandwidth  and alpha
-    self.bandwidth  = optbw
-    self.alpha  = optalpha
+        #set self bandwidth  and alpha
+        self.bandwidth  = optbw
+        self.alpha  = optalpha
 
-    return best_params, best_score
+        return best_params, best_score
 
 
 
