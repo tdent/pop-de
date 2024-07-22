@@ -129,7 +129,6 @@ class KDEOptimization(AdaptiveBwKDE):
     def __init__(self, data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True):
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
-
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, alpha, dim_names, do_fit)
 
@@ -146,14 +145,17 @@ class KDEOptimization(AdaptiveBwKDE):
             fom += awkde.evaluate(test_data)  
         return np.mean(fom)
 
-    def kfold_cv_score(self, bandwidth_val, alpha_val):
-        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
+    def kfold_cv_score(self, bandwidth_val, alpha_val, n_splits=2):
+        """
+        to do: how to choose and use s_split in init
+        """
+        kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
         fom = []
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
-            fom.append(kde.evaluate(test_data).sum())
+            fom.append(awkde.evaluate(test_data).sum())
         return sum(fom)
 
     def optimize_parameters(self, method='loo_cv', fom_plot=False):
@@ -165,7 +167,7 @@ class KDEOptimization(AdaptiveBwKDE):
         for bandwidth in self.bandwidth_options:
             for alpha in self.alpha_options:
                 if method=='kfold_cv':
-                    score = self.kfold_cv_score(bandwidth, alpha)
+                    score = self.kfold_cv_score(bandwidth, alpha, n_splits=2)
                 else:
                     print("doing loocv")
                     score = self.loo_cv_score(bandwidth, alpha)
