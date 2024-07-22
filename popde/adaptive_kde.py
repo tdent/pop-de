@@ -3,7 +3,7 @@ import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
 import matplotlib.pyplot as plt
-
+import operator
 
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
@@ -122,9 +122,10 @@ class KDEOptimization(AdaptiveBwKDE):
     Optimize bandwidth and alpha by grid search using
     cross validation with a log likelihood figure of merit 
     """
-    def __init__(self, data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True):
+    def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0, dim_names=None, do_fit=True, n_splits=2):
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
+        self.n_splits = n_splits
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, alpha, dim_names, do_fit)
 
@@ -134,30 +135,34 @@ class KDEOptimization(AdaptiveBwKDE):
         fom = 0.0
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-           
-            #######There may need some hints how to use it better 
-            ### also if we need to add weight option here
-            local_weights = None
+            #for weights we need corressponding weights as well
+            if self.weights is not None:
+                local_train_weights = weights[train_index]
+            local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
-            fom += awkde.evaluate(test_data)  
+            fom += np.log(awkde.evaluate(test_data))
         return np.mean(fom)
 
-    def kfold_cv_score(self, bandwidth_val, alpha_val, n_splits=2):
+    def kfold_cv_score(self, bandwidth_val, alpha_val):
         """
-        to do: how to choose and use s_split in init
+        Perform k-fold cross-validation with k =n_splits
+        which by default  is 2
         """
         from sklearn.model_selection import KFold
-        kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
         fom = []
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            local_weights = None
+            #for weights we need corressponding weights as well
+            if self.weights is not None:
+                local_train_weights = weights[train_index]
+            local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
-            fom.append(awkde.evaluate(test_data).sum())
+            log_kde_eval = np.log(awkde.evaluate(test_data))
+            fom.append(log_kde_eval.sum())
         return sum(fom)
 
-    def optimize_parameters(self, method='loo_cv', fom_plot=False):
-        import operator
+    def optimize_parameters(self, method='loo_cv', fom_plot_name=None):
         #best_score = float('inf')
         best_params = {'bandwidth': None, 'alpha': None}
 
@@ -165,7 +170,7 @@ class KDEOptimization(AdaptiveBwKDE):
         for bandwidth in self.bandwidth_options:
             for alpha in self.alpha_options:
                 if method=='kfold_cv':
-                    score = self.kfold_cv_score(bandwidth, alpha, n_splits=2)
+                    score = self.kfold_cv_score(bandwidth, alpha)
                 else:
                     score = self.loo_cv_score(bandwidth, alpha)
 
@@ -180,7 +185,7 @@ class KDEOptimization(AdaptiveBwKDE):
         maxFOM = FOM[(optbw, optalpha)]
 
         
-        if fom_plot==True:
+        if fom_plot_name is not None:
             import matplotlib.pyplot as plt
 
             fig = plt.figure(figsize=(12,8))
@@ -188,20 +193,19 @@ class KDEOptimization(AdaptiveBwKDE):
             for bw in self.bandwidth_options:
                 FOMlist = [FOM[(bw, al)] for al in self.alpha_options]
                 if bw not in ['silverman', 'scott']:
-                    bw = float(bw) #bwchoice.astype(np.float) #for list
-                    ax.plot(self.alpha_options, FOMlist, label='{0:.3f}'.format(bw))
+                    ax.plot(self.alpha_options, FOMlist, label='{0:.3f}'.format(float(bw)))
+                    if optbw == bw:
+                        ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1:.3f}$'.format(optalpha, float(optbw)))
                 else:
                     ax.plot(alphagrid, FOMlist, label='{}'.format(bw))
-            if optbw not in ['silverman', 'scott']:
-                ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1:.3f}$'.format(optalpha, optbw))
-            else:
-                ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
+                    ax.plot(optalpha, maxFOM, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
+            # add legends on top of plot in multicolumns
             handles, labels = ax.get_legend_handles_labels()
             lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,1.25), ncol =6, fancybox=True, shadow=True, fontsize=8)
-        #plt.ylim(maxFOM -5 , maxFOM +6)
-            plt.savefig("FOMfortwoDsourcecase.png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
+            plt.tight_layout()
+            plt.savefig(fom_plot_name+".png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
             plt.close()
 
         #set self bandwidth  and alpha
@@ -294,7 +298,6 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         for bw in bwgrid:
             for alp in alphagrid:
                 fom[(gbw, alp)] = self.loocv(bw, alp)
-        import operator
         optvalues = max(fom.items(), key=operator.itemgetter(1))[0]
         self.optbw, self.optalpha = optvalues[0], optvalues[1]
         self.fom_val = fom[(self.optbw, self.optalpha)]
