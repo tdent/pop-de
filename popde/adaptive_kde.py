@@ -3,6 +3,8 @@ import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
 from sklearn.model_selection import KFold, LeaveOneOut
+import matplotlib.pyplot as plt
+
 
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
@@ -44,8 +46,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         # Set up initial KDE with fixed bandwidth
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, dim_names, do_fit)
-        #print("in adaptive KDE:", dim_names)
-
+        print("in adaptive KDE:", dim_names)
         # Compute pilot kde values at input points
         self.pilot_values = self.evaluate(self.kde_data)
         # Calculate per-point bandwidths and apply them to fit adaptive KDE
@@ -119,37 +120,44 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
 
 class KDEOptimization(AdaptiveBwKDE):
+    """
+    Given grid of bandwidth and alpha values 
+    find optimized values using cross 
+    valitation with figure of merit
+    based on loglikelihood criteria 
+    """
     def __init__(self, data, weights, bandwidth_options, alpha_options , input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=0.5, alpha=0.0, dim_names=None, do_fit=True):
-        print("dim_names", dim_names)
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
 
         super().__init__(data, weights, input_transf, stdize,
-                         rescale, backend, bandwidth, dim_names, do_fit)
-        print("super dim_names", dim_names)
+                         rescale, backend, bandwidth, alpha, dim_names, do_fit)
+
     def loo_cv_score(self, bandwidth_val, alpha_val):
         loo = LeaveOneOut() #sklearn way
-        fom = 0.0
+        weights = self.weights
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            #kde evaluate here with KDEpy
-            local_weights = np.ones_like(train_data.shape[0])
-            kde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
-            fom += kde.evaluate(test_data)  
+           
+            #######There may need some hints how to use it better 
+            ### also if we need to add weight option here
+            local_weights = None
+            awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
+            fom += awkde.evaluate(test_data)  
         return np.mean(fom)
 
     def kfold_cv_score(self, bandwidth_val, alpha_val):
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
         fom = []
-
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            local_weights = np.ones_like(train_data.shape[0])
-            kde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
+            local_weights = None
+            awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
             fom.append(kde.evaluate(test_data).sum())
         return sum(fom)
 
     def optimize_parameters(self, method='loo_cv', fom_plot=False):
+        print("in optimization now")
         best_score = float('inf')
         best_params = {'bandwidth': None, 'alpha': None}
 
@@ -159,6 +167,7 @@ class KDEOptimization(AdaptiveBwKDE):
                 if method=='kfold_cv':
                     score = self.kfold_cv_score(bandwidth, alpha)
                 else:
+                    print("doing loocv")
                     score = self.loo_cv_score(bandwidth, alpha)
 
                 FOM[(bandwidth, alpha)] = score
@@ -166,9 +175,7 @@ class KDEOptimization(AdaptiveBwKDE):
                     best_score = score
                     best_params['bandwidth'] = bandwidth
                     best_params['alpha'] = alpha
-
         
-        #plot
         if fom_plot==True:
             import operator
             optval = max(FOM.items(), key=operator.itemgetter(1))[0]
