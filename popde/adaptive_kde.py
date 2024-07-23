@@ -122,26 +122,26 @@ class KDEOptimization(AdaptiveBwKDE):
     Optimize bandwidth and alpha by grid search using
     cross validation with a log likelihood figure of merit 
     """
-    def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0, dim_names=None, do_fit=True, n_splits=2):
+    def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0, dim_names=None, n_splits=2):
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
         self.n_splits = n_splits
         super().__init__(data, weights, input_transf, stdize,
-                         rescale, backend, bandwidth, alpha, dim_names, do_fit)
+                         rescale, backend, bandwidth, alpha, dim_names)
 
     def loo_cv_score(self, bandwidth_val, alpha_val):
         from sklearn.model_selection import LeaveOneOut
-        loo = LeaveOneOut() #sklearn way
+        loo = LeaveOneOut() 
         fom = 0.0
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            #for weights we need corressponding weights as well
+            # weights corressponding to training data
             if self.weights is not None:
                 local_train_weights = weights[train_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
             fom += np.log(awkde.evaluate(test_data))
-        return np.mean(fom)
+        return fom
 
     def kfold_cv_score(self, bandwidth_val, alpha_val):
         """
@@ -153,7 +153,7 @@ class KDEOptimization(AdaptiveBwKDE):
         fom = []
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            #for weights we need corressponding weights as well
+            # weights corressponding to training data
             if self.weights is not None:
                 local_train_weights = weights[train_index]
             local_weights = None # FIX ME
@@ -178,9 +178,8 @@ class KDEOptimization(AdaptiveBwKDE):
         optval = max(FOM.items(), key=operator.itemgetter(1))[0]
         optbw, optalpha  = optval[0], optval[1]
         best_score = FOM[(optbw, optalpha)]
-        #set self.bandwidth  and self.alpha  as optimized values
-        self.bandwidth  = optbw
-        self.alpha  = optalpha
+        # set self.bandwidth  and self.alpha  as optimized values anf fit KDE
+        self.set_adaptive_parameter(optalpha, optbw)
         best_params = {'bandwidth': optbw, 'alpha': optalpha}
         
         if fom_plot_name is not None:
