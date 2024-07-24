@@ -136,9 +136,6 @@ class KDEOptimization(AdaptiveBwKDE):
         fom = 0.
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            # weights corressponding to training data
-            if self.weights is not None:
-                local_train_weights = weights[train_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
             fom += np.log(awkde.evaluate(test_data))
@@ -153,9 +150,6 @@ class KDEOptimization(AdaptiveBwKDE):
         fom = []
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
-            # weights corressponding to training data
-            if self.weights is not None:
-                local_train_weights = weights[train_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val)
             log_kde_eval = np.log(awkde.evaluate(test_data))
@@ -188,15 +182,10 @@ class KDEOptimization(AdaptiveBwKDE):
             ax = fig.add_subplot(111)
             for bw in self.bandwidth_options:
                 fom_list = [fom_grid[(bw, al)] for al in self.alpha_options]
-                if bw not in ['silverman', 'scott']:
-                    ax.plot(self.alpha_options, FOMlist, 
+                ax.plot(self.alpha_options, FOMlist, 
                             label='{0:.3f}'.format(float(bw)))
-                    if optbw == bw:
-                        ax.plot(optalpha, best_score, 'ko', linewidth=10, 
+                ax.plot(optalpha, best_score, 'ko', linewidth=10, 
                                 label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
-                else:
-                    ax.plot(alphagrid, fom_list, label='{}'.format(bw))
-                    ax.plot(optalpha, best_score, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw={1}$'.format(optalpha, optbw))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
             # add legends on top of plot in multicolumns
