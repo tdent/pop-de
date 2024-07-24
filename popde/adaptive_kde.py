@@ -3,7 +3,6 @@ import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
 import matplotlib.pyplot as plt
-import operator
 
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
@@ -175,7 +174,7 @@ class KDEOptimization(AdaptiveBwKDE):
 
                 FOM[(bandwidth, alpha)] = score
 
-        optval = max(FOM.items(), key=operator.itemgetter(1))[0]
+        optval = max(FOM, key=lambda k: FOM[k])
         optbw, optalpha  = optval[0], optval[1]
         best_score = FOM[(optbw, optalpha)]
         # set self.bandwidth  and self.alpha  as optimized values anf fit KDE
@@ -292,7 +291,7 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         for bw in bwgrid:
             for alp in alphagrid:
                 fom[(gbw, alp)] = self.loocv(bw, alp)
-        optvalues = max(fom.items(), key=operator.itemgetter(1))[0]
+        optvalues = max(fom, key=lambda k: fom[k])
         self.optbw, self.optalpha = optvalues[0], optvalues[1]
         self.fom_val = fom[(self.optbw, self.optalpha)]
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
