@@ -121,7 +121,9 @@ class KDEOptimization(AdaptiveBwKDE):
     Optimize bandwidth and alpha by grid search using
     cross validation with a log likelihood figure of merit 
     """
-    def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None, stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0, dim_names=None, n_splits=2):
+    def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None,
+                 stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
+                 dim_names=None, do_fit=False, n_splits=2):
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
         self.n_splits = n_splits
@@ -131,7 +133,7 @@ class KDEOptimization(AdaptiveBwKDE):
     def loo_cv_score(self, bandwidth_val, alpha_val):
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
-        fom = 0.0
+        fom = 0.
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             # weights corressponding to training data
@@ -144,8 +146,7 @@ class KDEOptimization(AdaptiveBwKDE):
 
     def kfold_cv_score(self, bandwidth_val, alpha_val):
         """
-        Perform k-fold cross-validation with k =n_splits
-        which by default  is 2
+        Perform k-fold cross-validation
         """
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
@@ -164,20 +165,19 @@ class KDEOptimization(AdaptiveBwKDE):
     def optimize_parameters(self, method='loo_cv', fom_plot_name=None):
         best_params = {'bandwidth': None, 'alpha': None}
 
-        FOM= {}
+        # Perform grid search
+        fom_grid = {}
         for bandwidth in self.bandwidth_options:
             for alpha in self.alpha_options:
-                if method=='kfold_cv':
-                    score = self.kfold_cv_score(bandwidth, alpha)
+                if method == 'kfold_cv':
+                    fom_grid[(bandwidth, alpha)] = self.kfold_cv_score(bandwidth, alpha)
                 else:
-                    score = self.loo_cv_score(bandwidth, alpha)
+                    fom_grid[(bandwidth, alpha)] = self.loo_cv_score(bandwidth, alpha)
 
-                FOM[(bandwidth, alpha)] = score
-
-        optval = max(FOM, key=lambda k: FOM[k])
-        optbw, optalpha  = optval[0], optval[1]
-        best_score = FOM[(optbw, optalpha)]
-        # set self.bandwidth  and self.alpha  as optimized values anf fit KDE
+        optval = max(fom_grid.items(), key=operator.itemgetter(1))[0]
+        optbw, optalpha = optval[0], optval[1]
+        best_score = fom_grid[(optbw, optalpha)]
+        # set optimized self.bandwidth and self.alpha and fit the KDE
         self.set_adaptive_parameter(optalpha, optbw)
         best_params = {'bandwidth': optbw, 'alpha': optalpha}
         
@@ -187,23 +187,23 @@ class KDEOptimization(AdaptiveBwKDE):
             fig = plt.figure(figsize=(12,8))
             ax = fig.add_subplot(111)
             for bw in self.bandwidth_options:
-                FOMlist = [FOM[(bw, al)] for al in self.alpha_options]
+                fom_list = [fom_grid[(bw, al)] for al in self.alpha_options]
                 if bw not in ['silverman', 'scott']:
                     ax.plot(self.alpha_options, FOMlist, 
                             label='{0:.3f}'.format(float(bw)))
                     if optbw == bw:
                         ax.plot(optalpha, best_score, 'ko', linewidth=10, 
-                                label=r'$\alpha={0:.3f}, bw= {1:.3f}$'.format(optalpha, float(optbw)))
+                                label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
                 else:
-                    ax.plot(alphagrid, FOMlist, label='{}'.format(bw))
-                    ax.plot(optalpha, best_score, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw= {1}$'.format(optalpha, optbw))
+                    ax.plot(alphagrid, fom_list, label='{}'.format(bw))
+                    ax.plot(optalpha, best_score, 'ko', linewidth=10, label=r'$\alpha={0:.3f}, bw={1}$'.format(optalpha, optbw))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
             # add legends on top of plot in multicolumns
             handles, labels = ax.get_legend_handles_labels()
-            lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5,1.25), ncol =6, fancybox=True, shadow=True, fontsize=8)
+            lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.25), ncol=6, fancybox=True, shadow=True, fontsize=8)
             plt.tight_layout()
-            plt.savefig(fom_plot_name+".png", bbox_extra_artists=(lgd, ), bbox_inches='tight')
+            plt.savefig(fom_plot_name+".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.close()
 
         return  best_params, best_score
