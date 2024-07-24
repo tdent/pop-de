@@ -168,7 +168,7 @@ class KDEOptimization(AdaptiveBwKDE):
                 else:
                     fom_grid[(bandwidth, alpha)] = self.loo_cv_score(bandwidth, alpha)
 
-        optval = max(fom_grid.items(), key=operator.itemgetter(1))[0]
+        optval = max(fom_grid, key=lambda k: fom_grid[k])
         optbw, optalpha = optval[0], optval[1]
         best_score = fom_grid[(optbw, optalpha)]
         # set optimized self.bandwidth and self.alpha and fit the KDE
@@ -182,7 +182,7 @@ class KDEOptimization(AdaptiveBwKDE):
             ax = fig.add_subplot(111)
             for bw in self.bandwidth_options:
                 fom_list = [fom_grid[(bw, al)] for al in self.alpha_options]
-                ax.plot(self.alpha_options, FOMlist, 
+                ax.plot(self.alpha_options, fom_list, 
                             label='{0:.3f}'.format(float(bw)))
                 ax.plot(optalpha, best_score, 'ko', linewidth=10, 
                                 label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
