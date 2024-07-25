@@ -127,25 +127,17 @@ class KDEOptimization(AdaptiveBwKDE):
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
         self.n_splits = n_splits
-        # for transformation of data
-        self.data = data
-        self.ndim = self.data.shape[1]
-        self.input_transf = input_transf
-        self.stdize = stdize
-        self.rescale = rescale
-        self.prepare_data()
 
         super().__init__(data, weights, input_transf, stdize,
                          rescale, backend, bandwidth, alpha, dim_names)
 
 
     def loo_cv_score(self, bandwidth_val, alpha_val):
-        
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
-        for train_index, test_index in loo.split(self.data):
-            train_data, test_data = self.data[train_index], self.data[test_index]
+        for train_index, test_index in loo.split(self.kde_data):
+            train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val, input_transf=self.input_transf,
                  stdize=self.stdize, rescale=self.rescale)
@@ -163,8 +155,8 @@ class KDEOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
         fom = []
-        for train_index, test_index in kf.split(self.data):
-            train_data, test_data = self.data[train_index], self.data[test_index]
+        for train_index, test_index in kf.split(self.kde_data):
+            train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val, input_transf=self.input_transf,
                  stdize=self.stdize, rescale=self.rescale)
