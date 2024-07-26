@@ -188,8 +188,8 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
                 fom_list = [fom_grid[(bw, al)] for al in self.alpha_options]
                 ax.plot(self.alpha_options, fom_list, 
                         label='{0:.3f}'.format(float(bw)))
-                ax.plot(optalpha, best_score, 'ko', linewidth=10, 
-                        label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
+            ax.plot(optalpha, best_score, 'ko', linewidth=10, 
+                    label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
             # add legends on top of plot in multicolumns
