@@ -115,7 +115,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         self.set_alpha(new_alpha)
 
 
-class KDEOptimization(AdaptiveBwKDE):
+class AdaptiveKDEOptimization(AdaptiveBwKDE):
     """
     Optimize bandwidth and alpha by grid search using
     cross validation with a log likelihood figure of merit 
