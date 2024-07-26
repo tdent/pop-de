@@ -128,43 +128,36 @@ class KDEOptimization(AdaptiveBwKDE):
         self.bandwidth_options = bandwidth_options
         self.n_splits = n_splits
 
-        super().__init__(data, weights, input_transf, stdize,
-                         rescale, backend, bandwidth, alpha, dim_names)
+        super().__init__(data, weights, input_transf, stdize, rescale, backend,
+                         bandwidth, alpha, dim_names, do_fit)
 
-
-    def loo_cv_score(self, bandwidth_val, alpha_val):
+    def loo_cv_score(self, bw_val, alpha_val):
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
         for train_index, test_index in loo.split(self.kde_data):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
             local_weights = None # FIX ME
-            awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val, input_transf=self.input_transf,
-                 stdize=self.stdize, rescale=self.rescale)
-            if self.input_transf is not None:
-            # re-transform 
-                fom += np.log(awkde.evaluate_with_transf(test_data))
-            else:
-                fom += np.log(awkde.evaluate(test_data))
+            awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
+                                  stdize=self.stdize, rescale=self.rescale,
+                                  bandwidth=bw_val, alpha=alpha_val)
+            fom += np.log(awkde.evaluate(test_data))
         return fom
 
-    def kfold_cv_score(self, bandwidth_val, alpha_val):
+    def kfold_cv_score(self, bw_val, alpha_val, seed=42):
         """
         Perform k-fold cross-validation
         """
         from sklearn.model_selection import KFold
-        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=42)
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
         for train_index, test_index in kf.split(self.kde_data):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
             local_weights = None # FIX ME
-            awkde = AdaptiveBwKDE(train_data, local_weights, bandwidth=bandwidth_val,alpha=alpha_val, input_transf=self.input_transf,
-                 stdize=self.stdize, rescale=self.rescale)
-            if self.input_transf is not None:
-                # re-transform
-                log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
-            else:
-                log_kde_eval = np.log(awkde.evaluate(test_data))
+            awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
+                                  stdize=self.stdize, rescale=self.rescale,
+                                  bandwidth=bw_val, alpha=alpha_val)
+            log_kde_eval = np.log(awkde.evaluate(test_data))
             fom.append(log_kde_eval.sum())
         return sum(fom)
 
@@ -195,19 +188,20 @@ class KDEOptimization(AdaptiveBwKDE):
             for bw in self.bandwidth_options:
                 fom_list = [fom_grid[(bw, al)] for al in self.alpha_options]
                 ax.plot(self.alpha_options, fom_list, 
-                            label='{0:.3f}'.format(float(bw)))
+                        label='{0:.3f}'.format(float(bw)))
                 ax.plot(optalpha, best_score, 'ko', linewidth=10, 
-                                label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
+                        label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
             # add legends on top of plot in multicolumns
             handles, labels = ax.get_legend_handles_labels()
-            lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.25), ncol=6, fancybox=True, shadow=True, fontsize=8)
+            lgd = ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.25),
+                            ncol=6, fancybox=True, shadow=True, fontsize=8)
             plt.tight_layout()
             plt.savefig(fom_plot_name+".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
             plt.close()
 
-        return  best_params, best_score
+        return best_params, best_score
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
