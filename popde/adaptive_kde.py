@@ -2,7 +2,6 @@ import numpy as np
 import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
-import matplotlib.pyplot as plt
 
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
