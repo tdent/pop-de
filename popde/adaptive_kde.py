@@ -40,9 +40,10 @@ class AdaptiveBwKDE(VariableBwKDEPy):
                  do_fit=True):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
+        self.pilot_values = None
 
-        # Set up initial KDE with fixed bandwidth
-        # If do_fit is True, fit the initial KDE; if not, just initialize
+        # Set up pilot KDE with fixed bandwidth
+        # If do_fit is True, fit the pilot KDE; if not, just initialize
         self.pilot_kde = VariableBwKDEPy(data, weights, input_transf, stdize, rescale,
                                          backend, bandwidth, dim_names, do_fit)
         # Initialize the adaptive KDE
@@ -106,7 +107,11 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             The new value for the adaptive parameter alpha.
         """
         self.alpha = new_alpha
-        # Update local bandwidths (pilot values remain unchanged)
+        # Make sure pilot KDE was evaluated
+        if self.pilot_values is None:
+            self.pilot_kde.set_bandwidth(self.global_bandwidth)
+            self.pilot_values = self.pilot_kde.evaluate(self.kde_data)
+        # Update local bandwidths
         self.set_per_point_bandwidth(self.pilot_values)       
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
