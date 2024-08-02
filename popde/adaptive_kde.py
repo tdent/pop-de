@@ -39,12 +39,26 @@ class AdaptiveBwKDE(VariableBwKDEPy):
                  do_fit=True):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
+        self.pilot_values = None
 
-        # Set up initial KDE with fixed bandwidth
-        super().__init__(data, weights, input_transf, stdize,
-                         rescale, backend, bandwidth, dim_names, do_fit)
+        # Set up pilot KDE with fixed bandwidth
+        # If do_fit is True, fit the pilot KDE; if not, just initialize
+        self.pilot_kde = VariableBwKDEPy(data, weights, input_transf, stdize, rescale,
+                                         backend, bandwidth, dim_names, do_fit)
+        # Initialize the adaptive KDE
+        super().__init__(data, weights, input_transf, stdize, rescale, backend,
+                         bandwidth, dim_names, do_fit=False)
+        # Special initial fit method
+        # Note that self.fit() is inherited from the parent & uses self.bandwidth directly
+        if do_fit:
+            self.fit_adaptive()
+    
+    def fit_adaptive(self):
+        # Make sure pilot KDE has been fit
+        if self.pilot_kde.kernel_estimate is None:
+            self.pilot_kde.fit()
         # Compute pilot kde values at input points
-        self.pilot_values = self.evaluate(self.kde_data)
+        self.pilot_values = self.pilot_kde.evaluate(self.kde_data)
         # Calculate per-point bandwidths and apply them to fit adaptive KDE
         self.set_per_point_bandwidth(self.pilot_values)
 
@@ -71,7 +85,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
     def set_per_point_bandwidth(self, pilot_values):
         """
-        Calculate per-point bandwidths and re-initialize KDE
+        Calculate per-point bandwidths and re-fit KDE
 
         Parameters
         ----------
@@ -92,7 +106,11 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             The new value for the adaptive parameter alpha.
         """
         self.alpha = new_alpha
-        # Update local bandwidths (pilot values remain unchanged)
+        # Make sure pilot KDE was evaluated
+        if self.pilot_values is None:
+            self.pilot_kde.set_bandwidth(self.global_bandwidth)
+            self.pilot_values = self.pilot_kde.evaluate(self.kde_data)
+        # Update local bandwidths
         self.set_per_point_bandwidth(self.pilot_values)       
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
@@ -107,10 +125,12 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         new_global_bw : float
             The new value for the global bandwidth.
         """
-        self.set_bandwidth(new_global_bw)
-        # Update pilot_values using new global bandwidth
-        self.pilot_values = self.evaluate(self.kde_data)
+        self.global_bandwidth = new_global_bw
         
+        # Re-fit pilot KDE
+        self.pilot_kde.set_bandwidth(new_global_bw)
+        # Update pilot_values
+        self.pilot_values = self.pilot_kde.evaluate(self.kde_data)
         # Set alpha and calculate per-point bandwidths 
         self.set_alpha(new_alpha)
 
