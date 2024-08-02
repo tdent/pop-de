@@ -172,16 +172,18 @@ class SimpleKernelDensityEstimation:
         kde_vals = self.evaluate(transf_data)
 
         # Jacobian of transforms for each dimension
-        for i, option in enumerate(self.input_transf):
-            if option in['log', 'ln']:
-                input_Jacobian = 1. / points[:, i]
-            elif option == 'exp':
-                input_Jacobian = np.exp(points[:, i])
-            elif option in ('none', 'None'):
-                input_Jacobian = 1. 
+        for i in range(self.ndim):
+            if self.input_transf is not None: 
+                if self.input_transf[i] in ['log', 'ln']:
+                    input_Jacobian = 1. / points[:, i]
+                elif self.input_transf[i] == 'exp':
+                    input_Jacobian = np.exp(points[:, i])
+                elif self.input_transf[i] in ('none', 'None'):
+                    input_Jacobian = 1. 
+                else:
+                    raise ValueError(f"Invalid transformation option at index {i}: {option}")
             else:
-                raise ValueError(f"Invalid transformation option at index {i}: {option}")
-
+                input_Jacobian = 1.
             # Jacobian for training data standardization
             std_Jacobian = self.stds[i] if self.stdize else 1.
 
