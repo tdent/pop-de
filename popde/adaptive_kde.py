@@ -3,6 +3,7 @@ import scipy
 from density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
 
+
 class AdaptiveBwKDE(VariableBwKDEPy):
     """
     General adaptive Kernel Density Estimation (KDE) using KDEpy
