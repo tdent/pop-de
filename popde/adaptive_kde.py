@@ -224,6 +224,87 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         return best_params, best_score
 
 
+class KDERescaleOptimization(AdaptiveBwKDE):
+    """
+    Optimize rescaling factor per dimension using Nelder-mead
+    optimization  with minimizing function for
+    cross validation with a log likelihood figure of merit
+
+    Use fixed bw =1 and start with alpha=0.0
+    change rescale fatcor and see kde value
+    and optimize over that rescale 
+    """
+    def __init__(self, data, rescale_options, weights=None, input_transf=None,
+                 stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
+                 dim_names=None, do_fit=False, n_splits=2):
+        self.rescale_options = rescale_options
+        self.n_splits = n_splits
+        #not sure I need this
+        self.alpha = alpha
+        self.bandwidth = bandwidth
+
+        super().__init__(data, weights, input_transf, stdize, rescale, backend,
+                         bandwidth, alpha, dim_names, do_fit)
+
+    def loo_cv_score(self, rescale_factor):
+        from sklearn.model_selection import LeaveOneOut
+        loo = LeaveOneOut() 
+        fom = 0.
+        for train_index, test_index in loo.split(self.kde_data):
+            train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
+            local_weights = None # FIX ME
+            awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
+                                  stdize=self.stdize, rescale=rescale_factor,
+                                  bandwidth=self.bandwidth, alpha=self.alpha)
+            fom += np.log(awkde.evaluate(test_data))
+        return fom
+
+    def kfold_cv_score(self, rescale_factor):
+        """
+        Perform k-fold cross-validation
+        """
+        from sklearn.model_selection import KFold
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
+        fom = []
+        for train_index, test_index in kf.split(self.kde_data):
+            train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
+            local_weights = None # FIX ME
+            awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
+                                  stdize=self.stdize, rescale=rescale_factor,
+                                  bandwidth=self.bandwidth, alpha=self.alpha)
+            log_kde_eval = np.log(awkde.evaluate(test_data))
+            fom.append(log_kde_eval.sum())
+        return sum(fom)
+
+    def optimize_rescale_parameters(self, initial_rescale_choice, method='loo_cv', fom_plot_name=None, bounds=None):
+        """
+        Fixed bounds on rescale factor if it is crucial
+        """
+        from scipy.optimize import minimize
+        best_params = {'rescale_per_dim': None}
+        # Perform Nelder-mead based Optimization
+        if method == 'kfold_cv':
+            result = minimize(
+        - kfold_cv_score,        # func to minimize why negative?
+        rescale_choice,             # Initial guess for the parameters
+          # args= ( )  #Additional arguments to pass to the objective function
+        method='Nelder-Mead',      # Optimization method
+        options={'disp': True}     # Display optimization progress
+    #,bounds
+        )
+
+        else:
+            result = minimize(
+        - loo_cv_score,        # why negative
+        rescale_choice,     
+        #args=(),  # Additional arguments to pass to the objective function
+        method='Nelder-Mead',
+        options={'disp': True} #, bounds #crucial maybe
+    )
+
+        # Return the optimal parameters and the result min value
+        return result.x, result.fun
+            
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
     A class that given input values of observations and a choice of
