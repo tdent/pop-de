@@ -285,26 +285,28 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         # Perform Nelder-mead based Optimization
         if method == 'kfold_cv':
             result = minimize(
-        - kfold_cv_score,        # func to minimize why negative?
-        rescale_choice,             # Initial guess for the parameters
-          # args= ( )  #Additional arguments to pass to the objective function
-        method='Nelder-Mead',      # Optimization method
-        options={'disp': True}     # Display optimization progress
-    #,bounds
-        )
-
+                    - kfold_cv_score,        # func to minimize why negative?
+                    initial_rescale_choice,             # Initial guess for the parameters
+                    # args= ( )  #Additional arguments to pass to the objective function
+                    method='Nelder-Mead',      # Optimization method
+                    options={'disp': True}     # Display optimization progress
+                    #,bounds
+            )
         else:
             result = minimize(
-        - loo_cv_score,        # why negative
-        rescale_choice,     
-        #args=(),  # Additional arguments to pass to the objective function
-        method='Nelder-Mead',
-        options={'disp': True} #, bounds #crucial maybe
-    )
+                    - loo_cv_score,        # why negative
+                    initial_rescale_choice,     
+                    #args=(),  # Additional arguments to pass to the objective function
+                    method='Nelder-Mead',
+                    options={'disp': True} #, bounds #crucial maybe
+            )
 
+        #make self. rescale be the optimized results
+        self.rescale = result.x 
         # Return the optimal parameters and the result min value
         return result.x, result.fun
             
+
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
     A class that given input values of observations and a choice of
