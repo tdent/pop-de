@@ -349,7 +349,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         else:
             result = minimize(
                     self.loo_cv_score,        # why negative
-                    initial_rescale_choice,     
+                    initial_choices,     
                     #args=(),  # Additional arguments to pass to the objective function
                     method='Nelder-Mead',
                     options={'disp': True} #, bounds #crucial maybe
