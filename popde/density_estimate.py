@@ -164,16 +164,24 @@ class SimpleKernelDensityEstimation:
         Assumes a direct (plug-in or comparable) method rather than optimization
         """
         nd_bws = np.zeros(self.ndim)
-        
         # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
-        if method == 'oned_isj':
-            from KDEpy.bw_selection import improved_sheather_jones as isj
+        #if method == 'oned_isj':
+
+        from KDEpy.bw_selection import improved_sheather_jones as isj, scotts_rule as scott, silvermans_rule as silverman
+         #dict for mapping method names to functions
+        methods = {
+        'oned_isj': isj,
+        'scott': scott,
+        'silverman': silverman
+        }
+        selected_function = methods.get(method)
+        if selected_function:
             for i, col in enumerate(self.kde_data.T):
                 # KDEpy function requires an array of shape (n_samples, 1)
-                nd_bws[i] = isj(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
+                nd_bws[i] = selected_function(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
             return nd_bws
         else:
-            raise ValueError("Sorry, general bw calculations other than 1d ISJ are not supported")
+            raise ValueError("Sorry, general bw calculations other than 1d ISJ, scott or silverman, are not supported")
 
     def evaluate(self, points):
         """
