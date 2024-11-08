@@ -328,8 +328,9 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.0, method='kfold_cv', bounds=None):
 
         """
-        Fixed bounds on rescale factor otehrwise it is not working
-        or use better initial guesses using MultiRescaling class
+        given initial choice of rescale factors in each dimension
+        and alpha perform optimization based on 
+        cross validations on data
         """
         #make alpha bounds to be fixed in [0, 1]
         if bounds is None:
