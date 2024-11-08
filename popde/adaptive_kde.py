@@ -280,21 +280,19 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                 bandwidth, alpha, dim_names, do_fit)
 
-    def loo_cv_score(self, rescale_factors_alpha):
+    def loo_cv_score(self, rescale_factors, alpha_choice):
         """
         Compute the Leave-One-Out Cross-Validation (LOO-CV) score
           based on log-likelihood.
 
         Args:
-            rescale_factors_alpha (array-like): Array of rescale factors per
+            rescale_factors (array-like): Array of rescale factors per
               dimension and alpha value.
+            alpha_choice (float): float in [0, 1]
 
         Returns:
             float: Negative sum of log-likelihood scores for LOO-CV.
         """
-        alpha = rescale_factors_alpha[-1]
-        rescale_factor = rescale_factors_alpha[0:len(rescale_factors_alpha)-1]
-
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
@@ -302,17 +300,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
-                                  stdize=self.stdize, rescale=rescale_factor,
-                                  bandwidth=self.bandwidth, alpha=alpha)
+                                  stdize=self.stdize, rescale=rescale_factors,
+                                  bandwidth=self.bandwidth, alpha=alpha_choice)
             fom += np.log(awkde.evaluate(test_data))
         return -fom
 
-    def kfold_cv_score(self, rescale_factors_alpha, seed=42):
+    def kfold_cv_score(self, rescale_factors, alpha_choice, seed=42):
         """
         Perform k-fold cross-validation
         """
-        alpha= rescale_factors_alpha[-1]
-        rescale_factor = rescale_factors_alpha[0:len(rescale_factors_alpha)-1]
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
@@ -320,8 +316,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
-                                  stdize=self.stdize, rescale=rescale_factor,
-                                  bandwidth=self.bandwidth, alpha=alpha)
+                                  stdize=self.stdize, rescale=rescale_factors,
+                                  bandwidth=self.bandwidth, alpha=alpha_choice)
             log_kde_eval = np.log(awkde.evaluate(test_data))
             fom.append(log_kde_eval.sum())
         return -sum(fom)
