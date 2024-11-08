@@ -280,19 +280,20 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                 bandwidth, alpha, dim_names, do_fit)
 
-    def loo_cv_score(self, rescale_factors, alpha_choice):
+    def loo_cv_score(self, rescale_factors_alpha):
         """
         Compute the Leave-One-Out Cross-Validation (LOO-CV) score
           based on log-likelihood.
 
         Args:
-            rescale_factors (array-like): Array of rescale factors per
+            rescale_factors_alpha (array-like): Array of rescale factors per
               dimension and alpha value.
-            alpha_choice (float): float in [0, 1]
 
         Returns:
             float: Negative sum of log-likelihood scores for LOO-CV.
         """
+        rescale_factors = rescale_factors_alpha[:-1]
+        alpha_choice = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
@@ -305,10 +306,12 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             fom += np.log(awkde.evaluate(test_data))
         return -fom
 
-    def kfold_cv_score(self, rescale_factors, alpha_choice, seed=42):
+    def kfold_cv_score(self, rescale_factors_alpha, seed=42):
         """
         Perform k-fold cross-validation
         """
+        rescale_factors = rescale_factors_alpha[:-1]
+        alpha_choice = rescale_factors_alpha[-1]
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
@@ -353,7 +356,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             )
 
         #make self. rescale be the optimized results
-        self.rescale = result.x 
+        self.rescale = result.x[:-1]
+        self.alpha= result.x[-1]
         # Return the optimal parameters and the result min value
         return result.x, result.fun
             
