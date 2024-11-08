@@ -249,7 +249,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     """
     def __init__(self, data, rescale_factors_and_alpha_array, weights=None, input_transf=None,
                  stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
-                 dim_names=None, do_fit=False, n_splits=2):
+                 dim_names=None, do_fit=False, n_splits=5):
         """
         Initialize the KDERescaleOptimization instance 
         with data and optional configuration parameters.
@@ -326,7 +326,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             fom.append(log_kde_eval.sum())
         return -sum(fom)
 
-    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.0, method='loo_cv', fom_plot_name=None, bounds=None):
+    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.0, method='kfold_cv', bounds=None):
 
         """
         Fixed bounds on rescale factor otehrwise it is not working
@@ -347,6 +347,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                     , bounds=bounds
             )
         else:
+            print("using leave one out cross validation")
             result = minimize(
                     self.loo_cv_score,        # why negative
                     initial_choices,     
