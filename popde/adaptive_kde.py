@@ -247,7 +247,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         optimize_rescale_parameters(initial_rescale_factor, initial_alpha=0.0, method='loo_cv', fom_plot_name=None, bounds=None):
             Optimizes rescaling factors and alpha parameter.
     """
-    def __init__(self, data, rescale_factors_and_alpha_array, weights=None, input_transf=None,
+    def __init__(self, data, weights=None, input_transf=None,
                  stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
                  dim_names=None, do_fit=False, n_splits=5):
         """
@@ -256,8 +256,6 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
         Args:
             data (array-like): Data to fit the KDE model.
-            rescale_factors_and_alpha_array (array-like): Initial rescale factors
-               and alpha parameter array.
             weights (array-like, optional): Weights for each data point.
             input_transf (function, optional): Input transformation function.
             stdize (bool, optional): Whether to standardize data.
@@ -273,7 +271,6 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         """
 
         self.n_splits = n_splits
-        #not sure I need this
         self.alpha = alpha
         self.bandwidth = bandwidth
 
