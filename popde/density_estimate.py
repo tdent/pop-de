@@ -164,24 +164,19 @@ class SimpleKernelDensityEstimation:
         Assumes a direct (plug-in or comparable) method rather than optimization
         """
         nd_bws = np.zeros(self.ndim)
-        # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
-        #if method == 'oned_isj':
-
         from KDEpy.bw_selection import improved_sheather_jones as isj, scotts_rule as scott, silvermans_rule as silverman
-         #dict for mapping method names to functions
-        methods = {
-        'oned_isj': isj,
+        selected_function ={ 
+            'oned_isj': isj, # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
         'scott': scott,
         'silverman': silverman
-        }
-        selected_function = methods.get(method)
+        }.get(method)
         if selected_function:
             for i, col in enumerate(self.kde_data.T):
                 # KDEpy function requires an array of shape (n_samples, 1)
                 nd_bws[i] = selected_function(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
             return nd_bws
         else:
-            raise ValueError("Sorry, general bw calculations other than 1d ISJ, scott or silverman, are not supported")
+            raise ValueError("Sorry, general bw calculations other than oned_isj, scott or silverman, are not supported")
 
     def evaluate(self, points):
         """
@@ -403,8 +398,8 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
         unit matrix (e.g. it may vary between data points).
         """
         # Check compatibility of input options
-        if stdize:
-            raise ValueError("Can't standardize variables for this class!")
+        #if stdize:
+        #    raise ValueError("Can't standardize variables for this class!")
         if rescale is not None:
             raise ValueError("Can't specify rescaling for this class!")
 
