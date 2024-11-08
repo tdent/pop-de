@@ -347,7 +347,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                     options={'disp': True}     # Display optimization progress
                     , bounds=set_bounds
             )
-        else:
+        elif method == 'loo_cv':
             print("using leave one out cross validation")
             result = minimize(
                     self.loo_cv_score,        # why negative
@@ -357,6 +357,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                     options={'disp': True} , 
                     bounds =set_bounds
             )
+        else:
+            raise ValueError("Invalid method specified. Expected 'loo_cv' or 'kfold_cv'.")
 
         #make self. rescale be the optimized results
         self.rescale = result.x[:-1]
