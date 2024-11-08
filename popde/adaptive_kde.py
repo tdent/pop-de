@@ -331,7 +331,11 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         Fixed bounds on rescale factor otehrwise it is not working
         or use better initial guesses using MultiRescaling class
         """
-
+        #make alpha bounds to be fixed in [0, 1]
+        if bounds is None:
+            set_bounds = ((None, None),) * len(initial_rescale_factor) + ((0, 1),)
+        else:
+            set_bounds = bounds
         initial_choices = np.concatenate((initial_rescale_factor, initial_alpha))
         from scipy.optimize import minimize
         best_params = {'rescale_per_dim': None}
@@ -343,7 +347,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                     # args= ( )  #Additional arguments to pass to the objective function
                     method='Nelder-Mead',      # Optimization method
                     options={'disp': True}     # Display optimization progress
-                    , bounds=bounds
+                    , bounds=set_bounds
             )
         else:
             print("using leave one out cross validation")
@@ -352,7 +356,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                     initial_choices,     
                     #args=(),  # Additional arguments to pass to the objective function
                     method='Nelder-Mead',
-                    options={'disp': True} #, bounds #crucial maybe
+                    options={'disp': True} , 
+                    bounds =set_bounds
             )
 
         #make self. rescale be the optimized results
