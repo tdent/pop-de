@@ -238,7 +238,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         n_splits (int): Number of splits for k-fold cross-validation.
 
     Methods:
-        loo_cv_score(rescale_factors_alpha): 
+        loo_cv_score: 
             Computes Leave-One-Out cross-validation score 
             for given rescale factors.
         kfold_cv_score(rescale_factors_alpha, seed=42): 
@@ -267,7 +267,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             dim_names (list, optional): Dimension names.
             do_fit (bool, optional): Whether to fit the KDE upon initialization.
             n_splits (int, optional): Number of splits for k-fold 
-               cross-validation, default is 2.
+               cross-validation.
         """
 
         self.n_splits = n_splits
