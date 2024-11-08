@@ -398,8 +398,6 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
         unit matrix (e.g. it may vary between data points).
         """
         # Check compatibility of input options
-        #if stdize:
-        #    raise ValueError("Can't standardize variables for this class!")
         if rescale is not None:
             raise ValueError("Can't specify rescaling for this class!")
 
