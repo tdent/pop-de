@@ -340,7 +340,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         # Perform Nelder-mead based Optimization
         if method == 'kfold_cv':
             result = minimize(
-                    self.kfold_cv_score,        # func to minimize why negative?
+                    self.kfold_cv_score,        # func to minimize
                     initial_choices,             # Initial guess for the parameters
                     # args= ( )  #Additional arguments to pass to the objective function
                     method='Nelder-Mead',      # Optimization method
@@ -350,7 +350,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         elif method == 'loo_cv':
             print("using leave one out cross validation")
             result = minimize(
-                    self.loo_cv_score,        # why negative
+                    self.loo_cv_score,      
                     initial_choices,     
                     #args=(),  # Additional arguments to pass to the objective function
                     method='Nelder-Mead',
