@@ -294,13 +294,13 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
-        for train_index, test_index in loo.split(self.kde_data):
-            train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
+        for train_index, test_index in loo.split(self.data):
+            train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_factors,
                                   bandwidth=self.bandwidth, alpha=alpha_choice)
-            fom += np.log(awkde.evaluate(test_data))
+            fom += np.log(awkde.evaluate_with_transf(test_data))
         return -fom
 
     def kfold_cv_score(self, rescale_factors_alpha, seed=42):
@@ -312,13 +312,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
-        for train_index, test_index in kf.split(self.kde_data):
-            train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
+        for train_index, test_index in kf.split(self.data):
+            train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
+
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_factors,
-                                  bandwidth=self.bandwidth, alpha=alpha_choice)
-            log_kde_eval = np.log(awkde.evaluate(test_data))
+                                  bandwidth=self.bandwidth, alpha=alpha_choice, do_fit=True)
+
+            log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
             fom.append(log_kde_eval.sum())
         return -sum(fom)
 
