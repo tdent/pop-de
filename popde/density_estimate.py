@@ -163,8 +163,8 @@ class SimpleKernelDensityEstimation:
         Calculate an array of bandwidths for the transformed data, one bw per dimension
         Assumes a direct (plug-in or comparable) method rather than optimization
         """
-        nd_bws = np.zeros(self.ndim)
         from KDEpy.bw_selection import improved_sheather_jones as isj, scotts_rule as scott, silvermans_rule as silverman
+        nd_bws = np.zeros(self.ndim)
         bw_function = { 
             'oned_isj': isj, # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
         'scott': scott,
@@ -243,9 +243,9 @@ class SimpleKernelDensityEstimation:
         else:
             std_points = transf_points
 
-        # Rescaling
+        # Multiply each parameter by its rescale factor
         if self.rescale is not None:
-            transf_data = transf.transform_data(std_points, self.rescale)  
+            transf_data = transf.transform_data(std_points, self.rescale)
         else:
             transf_data = std_points
 
@@ -254,7 +254,7 @@ class SimpleKernelDensityEstimation:
 
         # Jacobian of transforms for each dimension
         input_Jacobian = 1.
-        if self.input_transf is not None:   
+        if self.input_transf is not None:
             for i, option in enumerate(self.input_transf):
                 if option in ['log', 'ln']:
                     input_Jacobian /= points[:, i]
@@ -294,7 +294,7 @@ class SimpleKernelDensityEstimation:
         Returns
         -------
         fig : matplotlib.Figure instance
-            Plot handle       
+            Plot handle 
 
         Example:
             np.random.seed(42)
