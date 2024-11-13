@@ -226,11 +226,9 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
 
 class KDERescaleOptimization(AdaptiveBwKDE):
     """
-     A class to optimize rescaling factors for each dimension and 
-      [an optional alpha parameter]
-    using Nelder-Mead optimization. 
-    The optimization is conducted by minimizing a cross-validation
-    score, based on log-likelihood as the figure of merit.
+    A class to optimize rescaling factors for each dimension and alpha 
+    using Nelder-Mead optimization of a cross-validation
+    log-likelihood figure of merit.
 
     Attributes:
         alpha (float): Initial alpha parameter for rescaling.
@@ -238,60 +236,43 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         n_splits (int): Number of splits for k-fold cross-validation.
 
     Methods:
-        loo_cv_score: 
+        loo_cv_score
             Computes Leave-One-Out cross-validation score 
             for given rescale factors.
-        kfold_cv_score(rescale_factors_alpha, seed=42): 
+        kfold_cv_score
             Computes k-fold cross-validation score 
             for given rescale factors.
-        optimize_rescale_parameters(initial_rescale_factor, initial_alpha=0.0, method='loo_cv', fom_plot_name=None, bounds=None):
+        optimize_rescale_parameters
             Optimizes rescaling factors and alpha parameter.
     """
     def __init__(self, data, weights=None, input_transf=None,
-                 stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
+                 stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.5,
                  dim_names=None, do_fit=False, n_splits=5):
         """
-        Initialize the KDERescaleOptimization instance 
-        with data and optional configuration parameters.
-
-        Args:
-            data (array-like): Data to fit the KDE model.
-            weights (array-like, optional): Weights for each data point.
-            input_transf (function, optional): Input transformation function.
-            stdize (bool, optional): Whether to standardize data.
-            rescale (array-like, optional): Initial rescale factors 
-               for each dimension.
-            backend (str, optional): Backend to use, default is 'KDEpy'.
+        Args inherited from parent class, except for the following:
+            rescale (array-like, optional): Initial rescale factors for each dimension.
             bandwidth (float, optional): Fixed bandwidth value, default is 1.0.
-            alpha (float, optional): Initial alpha value, default is 0.0.
-            dim_names (list, optional): Dimension names.
-            do_fit (bool, optional): Whether to fit the KDE upon initialization.
-            n_splits (int, optional): Number of splits for k-fold 
-               cross-validation.
+            alpha (float, optional): Initial alpha value.
+            n_splits (int, optional): Number of splits for k-fold cross-validation.
         """
-        self.data = data
         self.n_splits = n_splits
-        self.alpha = alpha
-        self.bandwidth = bandwidth
-        #self.input_transf  = input_transf
-        #self.stdize = stdize
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
-                bandwidth, alpha, dim_names, do_fit)
+                         bandwidth, alpha, dim_names, do_fit)
 
     def loo_cv_score(self, rescale_factors_alpha):
         """
         Compute the Leave-One-Out Cross-Validation (LOO-CV) score
-          based on log-likelihood.
+          based on log likelihood.
 
         Args:
             rescale_factors_alpha (array-like): Array of rescale factors per
-              dimension and alpha value.
+            dimension and alpha value.
 
         Returns:
-            float: Negative sum of log-likelihood scores for LOO-CV.
+            float: Negative sum of log likelihood for test data.
         """
-        rescale_factors = rescale_factors_alpha[:-1]
-        alpha_choice = rescale_factors_alpha[-1]
+        rescale_val = rescale_factors_alpha[:-1]
+        alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
@@ -299,84 +280,72 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
-                                  stdize=self.stdize, rescale=rescale_factors,
-                                  bandwidth=self.bandwidth, alpha=alpha_choice, do_fit=True)
-
+                                  stdize=self.stdize, rescale=rescale_val,
+                                  bandwidth=self.bandwidth, alpha=alpha_val)
             fom += np.log(awkde.evaluate_with_transf(test_data))
+
         return -fom
 
     def kfold_cv_score(self, rescale_factors_alpha, seed=42):
         """
         Perform k-fold cross-validation
         """
-        rescale_factors = rescale_factors_alpha[:-1]
-        alpha_choice = rescale_factors_alpha[-1]
+        rescale_val = rescale_factors_alpha[:-1]
+        alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
-        #this may fix
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
-
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
-                                  stdize=self.stdize, rescale=rescale_factors,
-                                  bandwidth=self.bandwidth, alpha=alpha_choice, do_fit=False)
-
-            self.kde_data = self.data
-            awkde.fit_adaptive()
-            #fit now on training data
-            print(awkde.rescale, np.max(test_data), awkde.alpha)
+                                  stdize=self.stdize, rescale=rescale_val,
+                                  bandwidth=self.bandwidth, alpha=alpha_val)
             log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
             fom.append(log_kde_eval.sum())
             
         return -sum(fom)
 
-    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.5, cv_method='kfold_cv', opt_method='Nelder-Mead', bounds=None,  opt_disp_options=None):
-
+    def optimize_rescale_parameters(self, init_rescale=None, init_alpha=None,
+                                    cv_method='kfold_cv', opt_method='Nelder-Mead',
+                                    bounds=None, **kwargs):
         """
-        given initial choice of rescale factors in each dimension
-        and alpha perform optimization based on 
-        cross validations on data
+        Given initial choices of rescale factors in each dimension and alpha,
+        perform optimization with a cross-validated log likelihood FOM
         """
-        #make alpha bounds to be fixed in [0, 1]
+        # Default bounds : alpha must be between 0, 1
         if bounds is None:
-            set_bounds = ((0.01, 100),) * len(initial_rescale_factor) + ((0, 1),)
-        else:
-            set_bounds = bounds
-         # Set default options if none provided
-        disp_options = opt_disp_options if opt_disp_options is None else {'disp': True}
-        initial_choices = np.concatenate((initial_rescale_factor, initial_alpha))
-        from scipy.optimize import minimize, differential_evolution
-        best_params = {'rescale_per_dim': None}
-        # Perform Nelder-mead based Optimization
-        if cv_method == 'kfold_cv':
-            result = minimize(
-                    self.kfold_cv_score,        # func to minimize
-                    initial_choices,             # Initial guess for the parameters
-                    # args= ( )  #Additional arguments to pass to the objective function
-                    method=opt_method,      # Optimization method
-                    options=disp_options,     # Display optimization progress
-                     bounds=set_bounds
-            )
-        elif cv_method == 'loo_cv':
-            result = minimize(
-                    self.loo_cv_score,      
-                    initial_choices,     
-                    #args=(),  # Additional arguments to pass to the objective function
-                    method=opt_method,
-                    options=disp_options , 
-                    bounds =set_bounds
-            )
-        else:
-            raise ValueError("Invalid method specified. Expected 'loo_cv' or 'kfold_cv'.")
+            bounds = ((0.01, 100),) * len(initial_rescale_factor) + ((0., 1.),)
+        # If initial guess is not specified, use class instance values
+        if init_rescale is None:
+            init_rescale = self.rescale
+        if init_alpha is None:
+            init_alpha = self.alpha
+        initial_choices = np.concatenate((init_rescale, init_alpha))
 
-        #make self. rescale be the optimized results
+        try:
+            score_fn = {
+                'kfold_cv': self.kfold_cv_score,
+                'loo_cv': self.loo_cv_score
+            }[cv_method]
+        except KeyError:
+            raise ValueError("Invalid cross-validation method, expected 'loo_cv' or 'kfold_cv'.")
+
+        from scipy.optimize import minimize
+        result = minimize(
+            score_fn,
+            np.concatenate((init_rescale, init_alpha)), # initial guesses
+            method=opt_method,
+            bounds=bounds,
+            options=kwargs  # Pass on additional options as a dictionary
+        )
+
+        # Set instance KDE parameters from the optimized results
         self.rescale = result.x[:-1]
-        self.alpha= result.x[-1]
-        # Return the optimal parameters and the result min value
+        self.alpha = result.x[-1]
+        
         return result.x, result.fun
-            
+
 
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
@@ -466,4 +435,3 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return self.fom_val, self.optbw, self.optalpha
-
