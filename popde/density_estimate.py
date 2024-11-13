@@ -260,7 +260,7 @@ class SimpleKernelDensityEstimation:
         std_Jacobian = 1. / np.prod(self.stds) if self.stdize else 1.
 
         # Jacobian for rescaling factor
-        rescale_Jacobian = 1. / np.prod(self.rescale) if (self.rescale is not None) else 1.
+        rescale_Jacobian = np.prod(self.rescale) if (self.rescale is not None) else 1.
 
         kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian
         return kde_vals
