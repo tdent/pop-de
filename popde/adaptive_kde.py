@@ -40,6 +40,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
                  do_fit=True):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
+        self.do_fit = do_fit
         self.pilot_values = None
 
         # Set up pilot KDE with fixed bandwidth
@@ -51,7 +52,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
                          bandwidth, dim_names, do_fit=False)
         # Special initial fit method
         # Note that self.fit() is inherited from the parent & uses self.bandwidth directly
-        if do_fit:
+        if self.do_fit:
             self.fit_adaptive()
     
     def fit_adaptive(self):
@@ -76,7 +77,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         Returns
         -------
         loc_bw_factor : array-like
-           local bandwidth factor for adaptive 
+           Local bandwidth factor for adaptive 
            bandwidth.
         """
         # Geometric mean of pilot kde values 
@@ -196,7 +197,8 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         optval = max(fom_grid, key=lambda k: fom_grid[k])
         optbw, optalpha = optval[0], optval[1]
         best_score = fom_grid[(optbw, optalpha)]
-        # set optimized self.bandwidth and self.alpha and fit the KDE
+
+        # Set optimized self.bandwidth and self.alpha and fit the KDE
         self.set_adaptive_parameter(optalpha, optbw)
         best_params = {'bandwidth': optbw, 'alpha': optalpha}
         
@@ -259,23 +261,40 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                          bandwidth, alpha, dim_names, do_fit)
 
+    def set_rescale(self, new_rescale):
+        """
+        Set the rescaling factors to new values and re-initialize KDE data and pilot.
+
+        Parameters
+        ----------
+        new_rescale : array-like of float
+            New rescaling factors.
+        """
+        self.rescale = new_rescale
+        # Re-initialize KDE data
+        self.prepare_data()
+        # Re-initialize pilot KDE with new parameters and re-fit if requested
+        self.pilot_kde = VariableBwKDEPy(self.data, self.weights, self.input_transf,
+                                         self.stdize, self.rescale, self.backend,
+                                         self.bandwidth, self.dim_names, do_fit=self.do_fit)
+
     def loo_cv_score(self, rescale_factors_alpha):
         """
-        Compute the Leave-One-Out Cross-Validation (LOO-CV) score
-          based on log likelihood.
+        Compute the Leave-One-Out Cross-Validation (LOO-CV) score based on log likelihood.
 
         Args:
             rescale_factors_alpha (array-like): Array of rescale factors per
             dimension and alpha value.
 
         Returns:
-            float: Negative sum of log likelihood for test data.
+            float: Negative sum of log likelihood over test data.
         """
         rescale_val = rescale_factors_alpha[:-1]
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
+        # Use original data for KDE evaluation to avoid rescaling biases in ln L
         for train_index, test_index in loo.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
@@ -288,13 +307,23 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
     def kfold_cv_score(self, rescale_factors_alpha, seed=42):
         """
-        Perform k-fold cross-validation
+        Compute the K-fold Cross-Validation score based on log likelihood.
+
+        Args:
+            rescale_factors_alpha (array-like): Array of rescale factors per
+            dimension and alpha value.
+
+            seed (int): Random seed for K-fold splitting.
+
+        Returns:
+            float: Negative sum of log likelihood over test data.
         """
         rescale_val = rescale_factors_alpha[:-1]
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
+        # Use original data for KDE evaluation to avoid rescaling biases in ln L
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
@@ -308,7 +337,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
     def optimize_rescale_parameters(self, init_rescale=None, init_alpha=None,
                                     cv_method='kfold_cv', opt_method='Nelder-Mead',
-                                    bounds=None, **kwargs):
+                                    bounds=None, **opt_kwargs):
         """
         Given initial choices of rescale factors in each dimension and alpha,
         perform optimization with a cross-validated log likelihood FOM
@@ -317,7 +346,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         if bounds is None:
             bounds = ((0.01, 100),) * len(init_rescale) + ((0., 1.),)
         # If initial guesses not specified, use class instance values
-        if init_rescale is None:  # ensure a np array
+        if init_rescale is None:  # Ensure a np array
             init_rescale = np.array(self.rescale)
         else:
             init_rescale = np.array(init_rescale)
@@ -340,13 +369,13 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             initial_choices,
             method=opt_method,
             bounds=bounds,
-            options=kwargs  # Pass on additional options as a dictionary
+            options=opt_kwargs  # Pass on additional options as a dictionary
         )
 
         # Set instance KDE parameters from the optimized results
-        self.rescale = result.x[:-1]
-        self.alpha = result.x[-1]
-        
+        self.set_rescale(result.x[:-1])
+        self.set_alpha(result.x[-1])  # Set alpha and re-fit KDEs
+
         return result.x, result.fun
 
 
