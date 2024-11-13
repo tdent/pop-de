@@ -221,6 +221,10 @@ class SimpleKernelDensityEstimation:
         --------
         kde_vals : array-like, shape (n_samples,)
         The KDE values adjusted by the Jacobian of the transformations.
+        Jacobian factors:
+            
+
+
         """
         # Initial transformation
         if self.input_transf is not None:
@@ -235,6 +239,10 @@ class SimpleKernelDensityEstimation:
             std_points = transf_points
 
         # Rescaling
+        #Transformed data, x', is computed by dividing each element of the data
+        #, x, by c1 (i.e., x' = x / c1).
+        #This scaling transformation shrinks or stretches the data
+        #in proportion to the value of c1
         if self.rescale is not None:
             transf_data = transf.transform_data(std_points, self.rescale)       
         else:
@@ -260,6 +268,12 @@ class SimpleKernelDensityEstimation:
         std_Jacobian = 1. / np.prod(self.stds) if self.stdize else 1.
 
         # Jacobian for rescaling factor
+        #When we evaluate the KDE on the rescaled data, x', it effectively computes the density function for x', which is adjusted for the scaled data range.
+        # However, the original KDE needs to be expressed in terms of the original data space, x. To achieve this, we re-express the KDE of the original data, f(x), in terms of the transformed KDE, f(x').
+        #Since x = x' * c1, the relationship between the KDE of the original and transformed data is given by:
+        #f(x)=f(x′⋅c1)=f(x′)*c1
+        #for each dimension we multiply with this corresponding factor
+
         rescale_Jacobian = np.prod(self.rescale) if (self.rescale is not None) else 1.
 
         kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian
