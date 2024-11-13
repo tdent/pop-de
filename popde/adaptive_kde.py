@@ -269,11 +269,12 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             n_splits (int, optional): Number of splits for k-fold 
                cross-validation.
         """
-
+        self.data = data
         self.n_splits = n_splits
         self.alpha = alpha
         self.bandwidth = bandwidth
-
+        #self.input_transf  = input_transf
+        #self.stdize = stdize
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                 bandwidth, alpha, dim_names, do_fit)
 
@@ -299,7 +300,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             local_weights = None # FIX ME
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_factors,
-                                  bandwidth=self.bandwidth, alpha=alpha_choice)
+                                  bandwidth=self.bandwidth, alpha=alpha_choice, do_fit=True)
+
             fom += np.log(awkde.evaluate_with_transf(test_data))
         return -fom
 
@@ -312,19 +314,25 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
+        #this may fix
         for train_index, test_index in kf.split(self.data):
             train_data, test_data = self.data[train_index], self.data[test_index]
             local_weights = None # FIX ME
 
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_factors,
-                                  bandwidth=self.bandwidth, alpha=alpha_choice, do_fit=True)
+                                  bandwidth=self.bandwidth, alpha=alpha_choice, do_fit=False)
 
+            self.kde_data = self.data
+            awkde.fit_adaptive()
+            #fit now on training data
+            print(awkde.rescale, np.max(test_data), awkde.alpha)
             log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
             fom.append(log_kde_eval.sum())
+            
         return -sum(fom)
 
-    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.0, method='kfold_cv', bounds=None):
+    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.5, method='kfold_cv', bounds=None):
 
         """
         given initial choice of rescale factors in each dimension
@@ -333,11 +341,11 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         """
         #make alpha bounds to be fixed in [0, 1]
         if bounds is None:
-            set_bounds = ((None, None),) * len(initial_rescale_factor) + ((0, 1),)
+            set_bounds = ((0.01, 100),) * len(initial_rescale_factor) + ((0, 1),)
         else:
             set_bounds = bounds
         initial_choices = np.concatenate((initial_rescale_factor, initial_alpha))
-        from scipy.optimize import minimize
+        from scipy.optimize import minimize, differential_evolution
         best_params = {'rescale_per_dim': None}
         # Perform Nelder-mead based Optimization
         if method == 'kfold_cv':
@@ -346,11 +354,10 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                     initial_choices,             # Initial guess for the parameters
                     # args= ( )  #Additional arguments to pass to the objective function
                     method='Nelder-Mead',      # Optimization method
-                    options={'disp': True}     # Display optimization progress
-                    , bounds=set_bounds
+                    options={'disp': True},     # Display optimization progress
+                     bounds=set_bounds
             )
         elif method == 'loo_cv':
-            print("using leave one out cross validation")
             result = minimize(
                     self.loo_cv_score,      
                     initial_choices,     
