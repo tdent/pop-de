@@ -165,18 +165,18 @@ class SimpleKernelDensityEstimation:
         """
         nd_bws = np.zeros(self.ndim)
         from KDEpy.bw_selection import improved_sheather_jones as isj, scotts_rule as scott, silvermans_rule as silverman
-        selected_function ={ 
+        bw_function = { 
             'oned_isj': isj, # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
         'scott': scott,
         'silverman': silverman
         }.get(method)
-        if selected_function:
+        if bw_function:
             for i, col in enumerate(self.kde_data.T):
                 # KDEpy function requires an array of shape (n_samples, 1)
-                nd_bws[i] = selected_function(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
+                nd_bws[i] = bw_function(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
             return nd_bws
         else:
-            raise ValueError("Sorry, general bw calculations other than oned_isj, scott or silverman, are not supported")
+            raise ValueError("Sorry, bw calculations other than oned_isj, scott or silverman, are not supported")
 
     def evaluate(self, points):
         """
@@ -255,7 +255,7 @@ class SimpleKernelDensityEstimation:
 
         # Jacobian of transforms for each dimension
         input_Jacobian = 1.
-        if self.input_transf is not None:
+        if self.input_transf is not None:   
             for i, option in enumerate(self.input_transf):
                 if option in ['log', 'ln']:
                     input_Jacobian /= points[:, i]
