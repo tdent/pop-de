@@ -225,10 +225,10 @@ class SimpleKernelDensityEstimation:
         for standardization re-adjust standardization to original coordinate
         for rescaling:
             transformed data, x', is computed by dividing each element of the data
-            x, by c1 (i.e., x' = x / c1) to shrink or stretches the data 
-            where self.rescale = 1/c1 
+            x, by c (i.e., x' = x / c) to shrink or stretches the data 
+            where self.rescale = 1/c 
             KDE is in rescaled data, x', to  re-express the KDE  in the 
-            original data f(x)=f(x′⋅c1)= f(x′)/c1
+            original data f(x)=f(x′⋅c)= f(x′)/c
             for each dimension we multiply with this corresponding factor
         """
         # Initial transformation
@@ -244,7 +244,7 @@ class SimpleKernelDensityEstimation:
             std_points = transf_points
 
         # Rescaling
-        #Transform data x' = x*self.rescale to shrinks or stretches the data
+        #Transform data x' = x/c  to shrinks or stretches the data
         if self.rescale is not None:
             transf_data = transf.transform_data(std_points, self.rescale)       
         else:
