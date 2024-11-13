@@ -345,7 +345,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         else:
             set_bounds = bounds
          # Set default options if none provided
-        disp_options = opt_disp_options if opt_disp_options is not None else {'disp': True}
+        disp_options = opt_disp_options if opt_disp_options is None else {'disp': True}
         initial_choices = np.concatenate((initial_rescale_factor, initial_alpha))
         from scipy.optimize import minimize, differential_evolution
         best_params = {'rescale_per_dim': None}
