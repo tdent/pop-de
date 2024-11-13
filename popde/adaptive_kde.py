@@ -228,9 +228,8 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
 
 class KDERescaleOptimization(AdaptiveBwKDE):
     """
-    A class to optimize rescaling factors for each dimension and alpha 
-    using Nelder-Mead optimization of a cross-validation
-    log-likelihood figure of merit.
+    A class to optimize rescaling factors for each dimension and alpha using
+    Nelder-Mead optimization of a cross-validation log likelihood figure of merit.
 
     Attributes:
         alpha (float): Initial alpha parameter for rescaling.
@@ -238,12 +237,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         n_splits (int): Number of splits for k-fold cross-validation.
 
     Methods:
+        set_rescale
+            Set new rescaling parameters and re-initialize KDE. 
         loo_cv_score
             Computes Leave-One-Out cross-validation score 
-            for given rescale factors.
+            for given rescale, alpha values.
         kfold_cv_score
             Computes k-fold cross-validation score 
-            for given rescale factors.
+            for given rescale, alpha values.
         optimize_rescale_parameters
             Optimizes rescaling factors and alpha parameter.
     """
@@ -467,3 +468,4 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return self.fom_val, self.optbw, self.optalpha
+
