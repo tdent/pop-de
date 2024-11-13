@@ -315,13 +315,16 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         """
         # Default bounds : alpha must be between 0, 1
         if bounds is None:
-            bounds = ((0.01, 100),) * len(initial_rescale_factor) + ((0., 1.),)
-        # If initial guess is not specified, use class instance values
-        if init_rescale is None:
-            init_rescale = self.rescale
+            bounds = ((0.01, 100),) * len(init_rescale) + ((0., 1.),)
+        # If initial guesses not specified, use class instance values
+        if init_rescale is None:  # ensure a np array
+            init_rescale = np.array(self.rescale)
+        else:
+            init_rescale = np.array(init_rescale)
         if init_alpha is None:
             init_alpha = self.alpha
-        initial_choices = np.concatenate((init_rescale, init_alpha))
+        # Insert alpha at the end of the array
+        initial_choices = np.insert(init_rescale, init_rescale.size, init_alpha)
 
         try:
             score_fn = {
@@ -334,7 +337,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         from scipy.optimize import minimize
         result = minimize(
             score_fn,
-            np.concatenate((init_rescale, init_alpha)), # initial guesses
+            initial_choices,
             method=opt_method,
             bounds=bounds,
             options=kwargs  # Pass on additional options as a dictionary
