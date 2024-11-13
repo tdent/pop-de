@@ -221,9 +221,15 @@ class SimpleKernelDensityEstimation:
         --------
         kde_vals : array-like, shape (n_samples,)
         The KDE values adjusted by the Jacobian of the transformations.
-        Jacobian factors:
-            
-
+        for input_transf Jacobian to get KDE in original coordinate,
+        for standardization re-adjust standardization
+        for rescaling:
+         kde is computed in transformed data, x': 
+         x' is computed by dividing each element of the 
+         data in original coordinates x:  x' = x / c1
+         so for re-transform kde to original coordinate 
+         we need kde of the original data f(x = x' * c1) 
+         so multiply kde with factor c1
 
         """
         # Initial transformation
