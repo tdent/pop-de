@@ -222,15 +222,14 @@ class SimpleKernelDensityEstimation:
         kde_vals : array-like, shape (n_samples,)
         The KDE values adjusted by the Jacobian of the transformations.
         for input_transf Jacobian to get KDE in original coordinate,
-        for standardization re-adjust standardization
+        for standardization re-adjust standardization to original coordinate
         for rescaling:
          kde is computed in transformed data, x': 
          x' is computed by dividing each element of the 
-         data in original coordinates x:  x' = x / c1
+         data in original coordinates x:  x' = x / c
          so for re-transform kde to original coordinate 
-         we need kde of the original data f(x = x' * c1) 
-         so multiply kde with factor c1
-
+         we need kde of the original data f(x = x' * c) 
+         so multiply kde  value with factor c
         """
         # Initial transformation
         if self.input_transf is not None:
@@ -274,12 +273,10 @@ class SimpleKernelDensityEstimation:
         std_Jacobian = 1. / np.prod(self.stds) if self.stdize else 1.
 
         # Jacobian for rescaling factor
-        #When we evaluate the KDE on the rescaled data, x', it effectively computes the density function for x', which is adjusted for the scaled data range.
-        # However, the original KDE needs to be expressed in terms of the original data space, x. To achieve this, we re-express the KDE of the original data, f(x), in terms of the transformed KDE, f(x').
-        #Since x = x' * c1, the relationship between the KDE of the original and transformed data is given by:
-        #f(x)=f(x′⋅c1)=f(x′)*c1
+        #KDE is in rescaled data, x', to  re-express the KDE of the original data f(x),
+        #in terms of the transformed KDE, f(x') with  x = x' * c1
+        #f(x)=f(x′⋅c1)= f(x′)*c1
         #for each dimension we multiply with this corresponding factor
-
         rescale_Jacobian = np.prod(self.rescale) if (self.rescale is not None) else 1.
 
         kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian
