@@ -332,7 +332,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             
         return -sum(fom)
 
-    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.5, method='kfold_cv', bounds=None):
+    def optimize_rescale_parameters(self, initial_rescale_factor, initial_alpha=0.5, cv_method='kfold_cv', opt_method='Nelder-Mead', bounds=None,  opt_disp_options=None):
 
         """
         given initial choice of rescale factors in each dimension
@@ -344,26 +344,28 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             set_bounds = ((0.01, 100),) * len(initial_rescale_factor) + ((0, 1),)
         else:
             set_bounds = bounds
+         # Set default options if none provided
+        disp_options = opt_disp_options if opt_disp_options is not None else {'disp': True}
         initial_choices = np.concatenate((initial_rescale_factor, initial_alpha))
         from scipy.optimize import minimize, differential_evolution
         best_params = {'rescale_per_dim': None}
         # Perform Nelder-mead based Optimization
-        if method == 'kfold_cv':
+        if cv_method == 'kfold_cv':
             result = minimize(
                     self.kfold_cv_score,        # func to minimize
                     initial_choices,             # Initial guess for the parameters
                     # args= ( )  #Additional arguments to pass to the objective function
-                    method='Nelder-Mead',      # Optimization method
-                    options={'disp': True},     # Display optimization progress
+                    method=opt_method,      # Optimization method
+                    options=disp_options,     # Display optimization progress
                      bounds=set_bounds
             )
-        elif method == 'loo_cv':
+        elif cv_method == 'loo_cv':
             result = minimize(
                     self.loo_cv_score,      
                     initial_choices,     
                     #args=(),  # Additional arguments to pass to the objective function
-                    method='Nelder-Mead',
-                    options={'disp': True} , 
+                    method=opt_method,
+                    options=disp_options , 
                     bounds =set_bounds
             )
         else:
