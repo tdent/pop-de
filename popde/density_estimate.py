@@ -220,16 +220,16 @@ class SimpleKernelDensityEstimation:
         Returns:
         --------
         kde_vals : array-like, shape (n_samples,)
-        The KDE values adjusted by the Jacobian of the transformations.
-        for input_transf Jacobian to get KDE in original coordinate,
-        for standardization re-adjust standardization to original coordinate
-        for rescaling:
-            transformed data, x', is computed by dividing each element of the data
-            x, by c (i.e., x' = x / c) to shrink or stretches the data 
-            where self.rescale = 1/c 
-            KDE is in rescaled data, x', to  re-express the KDE  in the 
-            original data f(x)=f(x′⋅c)= f(x′)/c
-            for each dimension we multiply with this corresponding factor
+        The KDE values adjusted by the Jacobian of the transformations to be a
+        density in the original space.
+        For standardization the transformed data x' = x / std(x), thus
+            f'(x') = f(x) * std(x)
+        or
+            f(x) = f'(x') / std(x)
+        For rescaling with rescale factor C the transformed data x' = x * C_x, thus
+            f'(x') = f(x) / C_x
+        or
+            f(x) = f'(x') * C_x
         """
         # Initial transformation
         if self.input_transf is not None:
@@ -244,9 +244,8 @@ class SimpleKernelDensityEstimation:
             std_points = transf_points
 
         # Rescaling
-        #Transform data x' = x/c  to shrinks or stretches the data
         if self.rescale is not None:
-            transf_data = transf.transform_data(std_points, self.rescale)       
+            transf_data = transf.transform_data(std_points, self.rescale)  
         else:
             transf_data = std_points
 
@@ -269,8 +268,7 @@ class SimpleKernelDensityEstimation:
         # Jacobian for training data standardization
         std_Jacobian = 1. / np.prod(self.stds) if self.stdize else 1.
 
-        # Jacobian for rescaling factor f(x) = f(x'*c) = f(x')/c for each dim
-        #where self.rescale = 1/c
+        # Jacobian for rescaling factor
         rescale_Jacobian = np.prod(self.rescale) if (self.rescale is not None) else 1.
 
         kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian
