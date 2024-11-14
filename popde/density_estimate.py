@@ -163,17 +163,20 @@ class SimpleKernelDensityEstimation:
         Calculate an array of bandwidths for the transformed data, one bw per dimension
         Assumes a direct (plug-in or comparable) method rather than optimization
         """
+        from KDEpy.bw_selection import improved_sheather_jones as isj, scotts_rule as scott, silvermans_rule as silverman
         nd_bws = np.zeros(self.ndim)
-        
-        # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
-        if method == 'oned_isj':
-            from KDEpy.bw_selection import improved_sheather_jones as isj
+        bw_function = { 
+            'oned_isj': isj, # 1-d Botev et al. ("Improved Sheather-Jones") algorithm from KDEpy
+        'scott': scott,
+        'silverman': silverman
+        }.get(method)
+        if bw_function:
             for i, col in enumerate(self.kde_data.T):
                 # KDEpy function requires an array of shape (n_samples, 1)
-                nd_bws[i] = isj(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
+                nd_bws[i] = bw_function(col[:, np.newaxis]) # Weighting is also possible, not implemented atm
             return nd_bws
         else:
-            raise ValueError("Sorry, general bw calculations other than 1d ISJ are not supported")
+            raise ValueError("Sorry, bw calculations other than oned_isj, scott or silverman, are not supported")
 
     def evaluate(self, points):
         """
@@ -217,7 +220,16 @@ class SimpleKernelDensityEstimation:
         Returns:
         --------
         kde_vals : array-like, shape (n_samples,)
-        The KDE values adjusted by the Jacobian of the transformations.
+        The KDE values adjusted by the Jacobian of the transformations to be a
+        density in the original space.
+        For standardization the transformed data x' = x / std(x), thus
+            f'(x') = f(x) * std(x)
+        or
+            f(x) = f'(x') / std(x)
+        For rescaling with rescale factor C the transformed data x' = x * C_x, thus
+            f'(x') = f(x) / C_x
+        or
+            f(x) = f'(x') * C_x
         """
         # Initial transformation
         if self.input_transf is not None:
@@ -231,9 +243,9 @@ class SimpleKernelDensityEstimation:
         else:
             std_points = transf_points
 
-        # Rescaling
+        # Multiply each parameter by its rescale factor
         if self.rescale is not None:
-            transf_data = transf.transform_data(std_points, self.rescale)       
+            transf_data = transf.transform_data(std_points, self.rescale)
         else:
             transf_data = std_points
 
@@ -257,7 +269,7 @@ class SimpleKernelDensityEstimation:
         std_Jacobian = 1. / np.prod(self.stds) if self.stdize else 1.
 
         # Jacobian for rescaling factor
-        rescale_Jacobian = 1. / np.prod(self.rescale) if (self.rescale is not None) else 1.
+        rescale_Jacobian = np.prod(self.rescale) if (self.rescale is not None) else 1.
 
         kde_vals *= input_Jacobian * std_Jacobian * rescale_Jacobian
         return kde_vals
@@ -282,7 +294,7 @@ class SimpleKernelDensityEstimation:
         Returns
         -------
         fig : matplotlib.Figure instance
-            Plot handle       
+            Plot handle 
 
         Example:
             np.random.seed(42)
@@ -395,8 +407,6 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
         unit matrix (e.g. it may vary between data points).
         """
         # Check compatibility of input options
-        if stdize:
-            raise ValueError("Can't standardize variables for this class!")
         if rescale is not None:
             raise ValueError("Can't specify rescaling for this class!")
 
