@@ -1,6 +1,5 @@
 import numpy as np
 import transform_utils as transf
-import utils_plot 
 
 
 class SimpleKernelDensityEstimation:
@@ -326,6 +325,7 @@ class SimpleKernelDensityEstimation:
         idx_dim2 = self.dim_names.index(dim2)
 
         # Generate a grid for the contour plot
+        import utils_plot
         xx, yy = utils_plot.get_twoD_grid(self.data[:, idx_dim1], self.data[:, idx_dim2], num_points=num_points)
         positions = np.column_stack([xx.ravel(), yy.ravel()])
         
