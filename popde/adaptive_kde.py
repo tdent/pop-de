@@ -152,7 +152,7 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         super().__init__(data, weights, input_transf, stdize, rescale, backend,
                          bandwidth, alpha, dim_names, do_fit)
 
-    def loo_cv_score(self, bw_val, alpha_val, uniform_mass_bandwidth=False):
+    def loo_cv_score(self, bw_val, alpha_val):
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
@@ -165,7 +165,7 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
             fom += np.log(awkde.evaluate(test_data))
         return fom
 
-    def kfold_cv_score(self, bw_val, alpha_val, seed=42, uniform_mass_bandwidth=False):
+    def kfold_cv_score(self, bw_val, alpha_val, seed=42):
         """
         Perform k-fold cross-validation
         """
@@ -182,7 +182,7 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
             fom.append(log_kde_eval.sum())
         return sum(fom)
 
-    def optimize_parameters(self, method='loo_cv', fom_plot_name=None, uniform_mass_bandwidth=False):
+    def optimize_parameters(self, method='loo_cv', fom_plot_name=None):
         best_params = {'bandwidth': None, 'alpha': None}
 
         # Perform grid search
@@ -190,9 +190,9 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         for bandwidth in self.bandwidth_options:
             for alpha in self.alpha_options:
                 if method == 'kfold_cv':
-                    fom_grid[(bandwidth, alpha)] = self.kfold_cv_score(bandwidth, alpha, uniform_mass_bandwidth=uniform_mass_bandwidth)
+                    fom_grid[(bandwidth, alpha)] = self.kfold_cv_score(bandwidth, alpha)
                 else:
-                    fom_grid[(bandwidth, alpha)] = self.loo_cv_score(bandwidth, alpha, uniform_mass_bandwidth=uniform_mass_bandwidth)
+                    fom_grid[(bandwidth, alpha)] = self.loo_cv_score(bandwidth, alpha)
 
         optval = max(fom_grid, key=lambda k: fom_grid[k])
         optbw, optalpha = optval[0], optval[1]
