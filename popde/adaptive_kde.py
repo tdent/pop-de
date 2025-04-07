@@ -152,7 +152,14 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         super().__init__(data, weights, input_transf, stdize, rescale, backend,
                          bandwidth, alpha, dim_names, do_fit)
 
-    def loo_cv_score(self, bw_val, alpha_val):
+    def loo_cv_score(self, bw_val, alpha_val, uniform_mass_bandwidth=False):
+        # Ensure bw_val is a numpy array
+        bw_val = np.array(bw_val)
+
+        # Apply shared bandwidth for first two dimensions if requested
+        if uniform_mass_bandwidth and len(bw_val) >= 2:
+            bw_val[1] = bw_val[0]  # Set 2nd dim equal to the 1st
+
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
@@ -165,10 +172,16 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
             fom += np.log(awkde.evaluate(test_data))
         return fom
 
-    def kfold_cv_score(self, bw_val, alpha_val, seed=42):
+    def kfold_cv_score(self, bw_val, alpha_val, seed=42, uniform_mass_bandwidth=False):
         """
         Perform k-fold cross-validation
         """
+        # Ensure bw_val is a numpy array
+        bw_val = np.array(bw_val)
+
+        # Apply shared bandwidth for first two dimensions if requested
+        if uniform_mass_bandwidth and len(bw_val) >= 2:
+            bw_val[1] = bw_val[0]  # Set 2nd dim equal to the 1st
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
@@ -182,7 +195,7 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
             fom.append(log_kde_eval.sum())
         return sum(fom)
 
-    def optimize_parameters(self, method='loo_cv', fom_plot_name=None):
+    def optimize_parameters(self, method='loo_cv', fom_plot_name=None, uniform_mass_bandwidth=False):
         best_params = {'bandwidth': None, 'alpha': None}
 
         # Perform grid search
@@ -190,9 +203,9 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         for bandwidth in self.bandwidth_options:
             for alpha in self.alpha_options:
                 if method == 'kfold_cv':
-                    fom_grid[(bandwidth, alpha)] = self.kfold_cv_score(bandwidth, alpha)
+                    fom_grid[(bandwidth, alpha)] = self.kfold_cv_score(bandwidth, alpha, uniform_mass_bandwidth=uniform_mass_bandwidth)
                 else:
-                    fom_grid[(bandwidth, alpha)] = self.loo_cv_score(bandwidth, alpha)
+                    fom_grid[(bandwidth, alpha)] = self.loo_cv_score(bandwidth, alpha, uniform_mass_bandwidth=uniform_mass_bandwidth)
 
         optval = max(fom_grid, key=lambda k: fom_grid[k])
         optbw, optalpha = optval[0], optval[1]
@@ -250,13 +263,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     """
     def __init__(self, data, weights=None, input_transf=None,
                  stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.5,
-                 dim_names=None, do_fit=False, n_splits=5):
+                 dim_names=None, do_fit=False, n_splits=5, uniform_mass_rescale=False):
         """
         Args inherited from parent class, except for the following:
             rescale (array-like, optional): Initial rescale factors for each dimension.
             bandwidth (float, optional): Fixed bandwidth value, default is 1.0.
             alpha (float, optional): Initial alpha value.
             n_splits (int, optional): Number of splits for k-fold cross-validation.
+            uniform_mass_rescal(optional): If True first two dimensions will have same bw
         """
         self.n_splits = n_splits
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
@@ -291,6 +305,13 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             float: Negative sum of log likelihood over test data.
         """
         rescale_val = rescale_factors_alpha[:-1]
+        # Ensure rescale_val is a numpy array
+        rescale_val = np.array(rescale_val)
+
+        # Apply shared bandwidth for first two dimensions if requested
+        if uniform_mass_rescale and len(rescale_val) >= 2:
+            rescale_val[1] = rescale_val[0]  # Set 2nd dim equal to the 1st
+
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
@@ -320,6 +341,13 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             float: Negative sum of log likelihood over test data.
         """
         rescale_val = rescale_factors_alpha[:-1]
+        # Ensure rescale_val is a numpy array
+        rescale_val = np.array(rescale_val)
+
+        # Apply shared bandwidth for first two dimensions if requested
+        if uniform_mass_rescale and len(rescale_val) >= 2:
+            rescale_val[1] = rescale_val[0]  # Set 2nd dim equal to the 1st
+
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
