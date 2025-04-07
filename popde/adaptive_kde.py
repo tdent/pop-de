@@ -309,7 +309,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         rescale_val = np.array(rescale_val)
 
         # Apply shared bandwidth for first two dimensions if requested
-        if uniform_mass_rescale and len(rescale_val) >= 2:
+        if self.uniform_mass_rescale and len(rescale_val) >= 2:
             rescale_val[1] = rescale_val[0]  # Set 2nd dim equal to the 1st
 
         alpha_val = rescale_factors_alpha[-1]
@@ -345,7 +345,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         rescale_val = np.array(rescale_val)
 
         # Apply shared bandwidth for first two dimensions if requested
-        if uniform_mass_rescale and len(rescale_val) >= 2:
+        if self.uniform_mass_rescale and len(rescale_val) >= 2:
             rescale_val[1] = rescale_val[0]  # Set 2nd dim equal to the 1st
 
         alpha_val = rescale_factors_alpha[-1]
