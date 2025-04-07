@@ -251,7 +251,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     """
     def __init__(self, data, weights=None, input_transf=None,
                  stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.5,
-                 dim_names=None, do_fit=False, n_splits=5, uniform_rescale=False):
+                 dim_names=None, do_fit=False, n_splits=5, uniform_rescale=False, uniform_dims=None):
         """
         Args inherited from parent class, except for the following:
             rescale (array-like, optional): Initial rescale factors for each dimension.
@@ -259,9 +259,11 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             alpha (float, optional): Initial alpha value.
             n_splits (int, optional): Number of splits for k-fold cross-validation.
             uniform_mass_rescal(optional, bol): If True first two dimensions will have same bw
+            uniform_dims: sequence with two values from dim_names
         """
         self.n_splits = n_splits
         self.uniform_rescale = uniform_rescale
+        self.uniform_dims = uniform_dims
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                          bandwidth, alpha, dim_names, do_fit)
 
@@ -299,8 +301,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
         # Apply shared bandwidth 
         if self.uniform_rescale:
-            bw_mass = rescale_val[0]
-            rescale_val = np.insert(rescale_val, 0 , bw_mass)
+            assert all(item in self.dim_names for item in self.uniform_dims), "Some elements in cut_seq are not in seq"
+            # Get indices
+            indices = [self.dim_names.index(item) for item in self.uniform_dims]
+            cut_dim_index = indices[0]
+            bw_val = rescale_val
+            back_dim_index = indices[1]
+            rescale_val = np.insert(rescale_val, back_dim_index, bw_val)
+            #bw_mass = rescale_val[0]
+            #rescale_val = np.insert(rescale_val, 0 , bw_mass)
 
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
@@ -336,8 +345,16 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
         # Apply shared bandwidth for first two dimensions if requested
         if self.uniform_rescale:
-            bw_mass = rescale_val[0]
-            rescale_val = np.insert(rescale_val, 0 , bw_mass)
+            assert all(item in self.dim_names for item in self.uniform_dims), "Some elements in cut_seq are not in seq"
+            # Get indices
+            indices = [self.dim_names.index(item) for item in self.uniform_dims]
+            cut_dim_index = indices[0]
+            bw_val = rescale_val
+            back_dim_index = indices[1]
+
+            rescale_val = np.insert(rescale_val, back_dim_index , bw_mass)
+            #bw_mass = rescale_val[0]
+            #rescale_val = np.insert(rescale_val, 0 , bw_mass)
 
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import KFold
@@ -363,8 +380,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         perform optimization with a cross-validated log likelihood FOM
         """
         if self.uniform_rescale:
-            #remove this first bw dimension
-            init_rescale = init_rescale[1:]
+            assert all(item in self.dim_names for item in self.uniform_dims), "Some elements in cut_seq are not in seq"
+
+            # Get indices
+            indices = [self.dim_names.index(item) for item in self.uniform_dims]
+            cut_dim_index = indices[0]
+            #remove bw dimension given index
+            init_rescale = np.delete(init_rescale, cut_dim_index)
+            #init_rescale = init_rescale[1:]
 
         # Default bounds : alpha must be between 0, 1
         if bounds is None:
