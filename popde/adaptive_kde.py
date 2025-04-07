@@ -153,13 +153,6 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
                          bandwidth, alpha, dim_names, do_fit)
 
     def loo_cv_score(self, bw_val, alpha_val, uniform_mass_bandwidth=False):
-        # Ensure bw_val is a numpy array
-        bw_val = np.array(bw_val)
-
-        # Apply shared bandwidth for first two dimensions if requested
-        if uniform_mass_bandwidth and len(bw_val) >= 2:
-            bw_val[1] = bw_val[0]  # Set 2nd dim equal to the 1st
-
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut() 
         fom = 0.
@@ -176,12 +169,6 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         """
         Perform k-fold cross-validation
         """
-        # Ensure bw_val is a numpy array
-        bw_val = np.array(bw_val)
-
-        # Apply shared bandwidth for first two dimensions if requested
-        if uniform_mass_bandwidth and len(bw_val) >= 2:
-            bw_val[1] = bw_val[0]  # Set 2nd dim equal to the 1st
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
@@ -248,7 +235,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         alpha (float): Initial alpha parameter for rescaling.
         bandwidth (float): Fixed bandwidth, default set to 1.0.
         n_splits (int): Number of splits for k-fold cross-validation.
-
+        uniform_mass_rescale: (bool, default is False) Use for 
+               using same bwds in masses dimensions
     Methods:
         set_rescale
             Set new rescaling parameters and re-initialize KDE. 
@@ -270,9 +258,10 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             bandwidth (float, optional): Fixed bandwidth value, default is 1.0.
             alpha (float, optional): Initial alpha value.
             n_splits (int, optional): Number of splits for k-fold cross-validation.
-            uniform_mass_rescal(optional): If True first two dimensions will have same bw
+            uniform_mass_rescal(optional, bol): If True first two dimensions will have same bw
         """
         self.n_splits = n_splits
+        self.uniform_mass_rescale = uniform_mass_rescale
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                          bandwidth, alpha, dim_names, do_fit)
 
@@ -308,9 +297,10 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         # Ensure rescale_val is a numpy array
         rescale_val = np.array(rescale_val)
 
-        # Apply shared bandwidth for first two dimensions if requested
-        if uniform_mass_rescale and len(rescale_val) >= 2:
-            rescale_val[1] = rescale_val[0]  # Set 2nd dim equal to the 1st
+        # Apply shared bandwidth 
+        if self.uniform_mass_rescale:
+            bw_mass = rescale_val[0]
+            rescale_val = np.insert(rescale_val, 0 , bw_mass)
 
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
@@ -345,8 +335,9 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         rescale_val = np.array(rescale_val)
 
         # Apply shared bandwidth for first two dimensions if requested
-        if uniform_mass_rescale and len(rescale_val) >= 2:
-            rescale_val[1] = rescale_val[0]  # Set 2nd dim equal to the 1st
+        if self.uniform_mass_rescale:
+            bw_mass = rescale_val[0]
+            rescale_val = np.insert(rescale_val, 0 , bw_mass)
 
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import KFold
@@ -371,6 +362,10 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         Given initial choices of rescale factors in each dimension and alpha,
         perform optimization with a cross-validated log likelihood FOM
         """
+        if self.uniform_mass_rescale:
+            #remove this first bw dimension
+            init_rescale = init_rescale[1:]
+
         # Default bounds : alpha must be between 0, 1
         if bounds is None:
             bounds = ((0.01, 100),) * len(init_rescale) + ((0., 1.),)
@@ -383,7 +378,6 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             init_alpha = self.alpha
         # Insert alpha at the end of the array
         initial_choices = np.insert(init_rescale, init_rescale.size, init_alpha)
-
         try:
             score_fn = {
                 'kfold_cv': self.kfold_cv_score,
@@ -391,20 +385,22 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             }[cv_method]
         except KeyError:
             raise ValueError("Invalid cross-validation method, expected 'loo_cv' or 'kfold_cv'.")
-
         from scipy.optimize import minimize
         result = minimize(
             score_fn,
             initial_choices,
             method=opt_method,
-            bounds=bounds,
+            bounds=bounds, 
             options=opt_kwargs  # Pass on additional options as a dictionary
         )
 
+        #if using mass dim get back banwidth with insert option 
+        if self.uniform_mass_rescale:
+            bw_mass = result.x[0]
+            result.x = np.insert(result.x, 0 , bw_mass)#add at zeroth location the bw 
         # Set instance KDE parameters from the optimized results
         self.set_rescale(result.x[:-1])
         self.set_alpha(result.x[-1])  # Set alpha and re-fit KDEs
-
         return result.x, result.fun
 
 
