@@ -235,7 +235,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         alpha (float): Initial alpha parameter for rescaling.
         bandwidth (float): Fixed bandwidth, default set to 1.0.
         n_splits (int): Number of splits for k-fold cross-validation.
-        uniform_mass_rescale: (bool, default is False) Use for 
+        uniform_rescale: (bool, default is False) Use for 
                using same bwds in masses dimensions
     Methods:
         set_rescale
@@ -251,7 +251,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     """
     def __init__(self, data, weights=None, input_transf=None,
                  stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.5,
-                 dim_names=None, do_fit=False, n_splits=5, uniform_mass_rescale=False):
+                 dim_names=None, do_fit=False, n_splits=5, uniform_rescale=False):
         """
         Args inherited from parent class, except for the following:
             rescale (array-like, optional): Initial rescale factors for each dimension.
@@ -261,7 +261,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             uniform_mass_rescal(optional, bol): If True first two dimensions will have same bw
         """
         self.n_splits = n_splits
-        self.uniform_mass_rescale = uniform_mass_rescale
+        self.uniform_rescale = uniform_rescale
         super().__init__(data, weights, input_transf, stdize, rescale, backend, 
                          bandwidth, alpha, dim_names, do_fit)
 
@@ -298,7 +298,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         rescale_val = np.array(rescale_val)
 
         # Apply shared bandwidth 
-        if self.uniform_mass_rescale:
+        if self.uniform_rescale:
             bw_mass = rescale_val[0]
             rescale_val = np.insert(rescale_val, 0 , bw_mass)
 
@@ -335,7 +335,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         rescale_val = np.array(rescale_val)
 
         # Apply shared bandwidth for first two dimensions if requested
-        if self.uniform_mass_rescale:
+        if self.uniform_rescale:
             bw_mass = rescale_val[0]
             rescale_val = np.insert(rescale_val, 0 , bw_mass)
 
@@ -362,7 +362,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         Given initial choices of rescale factors in each dimension and alpha,
         perform optimization with a cross-validated log likelihood FOM
         """
-        if self.uniform_mass_rescale:
+        if self.uniform_rescale:
             #remove this first bw dimension
             init_rescale = init_rescale[1:]
 
@@ -395,7 +395,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         )
 
         #if using mass dim get back banwidth with insert option 
-        if self.uniform_mass_rescale:
+        if self.uniform_rescale:
             bw_mass = result.x[0]
             result.x = np.insert(result.x, 0 , bw_mass)#add at zeroth location the bw 
         # Set instance KDE parameters from the optimized results
