@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-from density_estimate import VariableBwKDEPy 
+from .density_estimate import VariableBwKDEPy 
 from scipy.stats import gmean
 
 
