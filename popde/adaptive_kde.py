@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-from .density_estimate import VariableBwKDEPy 
+from .density_estimate import VariableBwKDEPy
 from scipy.stats import gmean
 
 
@@ -21,7 +21,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     sample2 = rndgen.normal(mean2, sigma2, size=n_samples)
     sample3 = rndgen.normal(mean3, sigma3, size=n_samples)
     sample = np.column_stack((sample1, sample2, sample3)) # shape is (n_points, n_features)
-    # Create and fit the adaptive KDE 
+    # Create and fit the adaptive KDE
     kde = AdaptiveBwKDE(sample, dim_names=['x', 'y', 'z'], alpha=0.5, input_transf=None)
     # Generate grid for plotting
     xgrid = np.linspace(sample1.min(), sample1.max(), 100)
@@ -54,7 +54,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         # Note that self.fit() is inherited from the parent & uses self.bandwidth directly
         if self.do_fit:
             self.fit_adaptive()
-    
+
     def fit_adaptive(self):
         # Make sure pilot KDE has been fit
         if self.pilot_kde.kernel_estimate is None:
@@ -77,10 +77,10 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         Returns
         -------
         loc_bw_factor : array-like
-           Local bandwidth factor for adaptive 
+           Local bandwidth factor for adaptive
            bandwidth.
         """
-        # Geometric mean of pilot kde values 
+        # Geometric mean of pilot kde values
         g = gmean(kde_values)
         loc_bw_factor = (kde_values / g) ** self.alpha
         return loc_bw_factor
@@ -97,7 +97,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         self.set_bandwidth(
             self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
         )
-    
+
     def set_alpha(self, new_alpha):
         """
         Set the adaptive parameter alpha to a new value and re-initialize KDE.
@@ -113,7 +113,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             self.pilot_kde.set_bandwidth(self.global_bandwidth)
             self.pilot_values = self.pilot_kde.evaluate(self.kde_data)
         # Update local bandwidths
-        self.set_per_point_bandwidth(self.pilot_values)       
+        self.set_per_point_bandwidth(self.pilot_values)
 
     def set_adaptive_parameter(self, new_alpha, new_global_bw):
         """
@@ -128,19 +128,19 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             The new value for the global bandwidth.
         """
         self.global_bandwidth = new_global_bw
-        
+
         # Re-fit pilot KDE
         self.pilot_kde.set_bandwidth(new_global_bw)
         # Update pilot_values
         self.pilot_values = self.pilot_kde.evaluate(self.kde_data)
-        # Set alpha and calculate per-point bandwidths 
+        # Set alpha and calculate per-point bandwidths
         self.set_alpha(new_alpha)
 
 
 class AdaptiveKDEOptimization(AdaptiveBwKDE):
     """
     Optimize bandwidth and alpha by grid search using
-    cross validation with a log likelihood figure of merit 
+    cross validation with a log likelihood figure of merit
     """
     def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None,
                  stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
@@ -154,7 +154,7 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
 
     def loo_cv_score(self, bw_val, alpha_val):
         from sklearn.model_selection import LeaveOneOut
-        loo = LeaveOneOut() 
+        loo = LeaveOneOut()
         fom = 0.
         for train_index, test_index in loo.split(self.kde_data):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
@@ -201,7 +201,7 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         # Set optimized self.bandwidth and self.alpha and fit the KDE
         self.set_adaptive_parameter(optalpha, optbw)
         best_params = {'bandwidth': optbw, 'alpha': optalpha}
-        
+
         if fom_plot_name is not None:
             import matplotlib.pyplot as plt
 
@@ -209,9 +209,9 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
             ax = fig.add_subplot(111)
             for bw in self.bandwidth_options:
                 fom_list = [fom_grid[(bw, al)] for al in self.alpha_options]
-                ax.plot(self.alpha_options, fom_list, 
+                ax.plot(self.alpha_options, fom_list,
                         label='{0:.3f}'.format(float(bw)))
-            ax.plot(optalpha, best_score, 'ko', linewidth=10, 
+            ax.plot(optalpha, best_score, 'ko', linewidth=10,
                     label=r'$\alpha={0:.3f}, bw={1:.3f}$'.format(optalpha, float(optbw)))
             ax.set_xlabel(r'$\alpha$', fontsize=18)
             ax.set_ylabel(r'$FOM$', fontsize=18)
@@ -238,12 +238,12 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
     Methods:
         set_rescale
-            Set new rescaling parameters and re-initialize KDE. 
+            Set new rescaling parameters and re-initialize KDE.
         loo_cv_score
-            Computes Leave-One-Out cross-validation score 
+            Computes Leave-One-Out cross-validation score
             for given rescale, alpha values.
         kfold_cv_score
-            Computes k-fold cross-validation score 
+            Computes k-fold cross-validation score
             for given rescale, alpha values.
         optimize_rescale_parameters
             Optimizes rescaling factors and alpha parameter.
@@ -259,8 +259,11 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             n_splits (int, optional): Number of splits for k-fold cross-validation.
         """
         self.n_splits = n_splits
-        super().__init__(data, weights, input_transf, stdize, rescale, backend, 
+        super().__init__(data, weights, input_transf, stdize, rescale, backend,
                          bandwidth, alpha, dim_names, do_fit)
+        # Allow for weights not to be specified
+        if self.weights is None:
+            self.weights = np.ones(self.data.shape[0])
 
     def set_rescale(self, new_rescale):
         """
@@ -293,16 +296,20 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         rescale_val = rescale_factors_alpha[:-1]
         alpha_val = rescale_factors_alpha[-1]
         from sklearn.model_selection import LeaveOneOut
-        loo = LeaveOneOut() 
+        loo = LeaveOneOut()
         fom = 0.
         # Use original data for KDE evaluation to avoid rescaling biases in ln L
         for train_index, test_index in loo.split(self.data):
+            train_weights, test_weights = self.weights[train_index], self.weights[test_index]
+            # If test event has weight 0, do nothing
+            if test_weights.sum() == 0.:
+                continue
             train_data, test_data = self.data[train_index], self.data[test_index]
-            local_weights = None # FIX ME
-            awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
+            awkde = AdaptiveBwKDE(train_data, train_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_val,
                                   bandwidth=self.bandwidth, alpha=alpha_val)
-            fom += np.log(awkde.evaluate_with_transf(test_data))
+            # Weight is a length 1 array for LOO
+            fom += test_weights[0] * np.log(awkde.evaluate_with_transf(test_data))
 
         return -fom
 
@@ -326,14 +333,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         fom = []
         # Use original data for KDE evaluation to avoid rescaling biases in ln L
         for train_index, test_index in kf.split(self.data):
+            train_weights, test_weights = self.weights[train_index], self.weights[test_index]
             train_data, test_data = self.data[train_index], self.data[test_index]
-            local_weights = None # FIX ME
-            awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
+            awkde = AdaptiveBwKDE(train_data, train_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_val,
                                   bandwidth=self.bandwidth, alpha=alpha_val)
             log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
-            fom.append(log_kde_eval.sum())
-            
+            # Weighted sum of per-event log likelihoods
+            fom.append((test_weights * log_kde_eval).sum())
+
         return -sum(fom)
 
     def optimize_rescale_parameters(self, init_rescale=None, init_alpha=None,
@@ -438,7 +446,6 @@ class AdaptiveKDELeaveOneOutCrossValidation():
 
     def loocv(self, bw, alpha):
         """
-        we use self.data 
         Calculate likelihood FOM using leave one out cross validation for
         finding best choice of bandwidth and alpha
         """

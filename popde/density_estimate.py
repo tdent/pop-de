@@ -80,9 +80,9 @@ class SimpleKernelDensityEstimation:
             # Check the array
             self.weights = np.atleast_1d(weights).astype(float)
             if self.weights.ndim != 1:
-                raise ValueError("weights should be one-dimensional.")
+                raise ValueError(f"Weights should be one-dimensional! I got {self.weights.ndim} dimensions")
             if len(self.weights) != self.data.shape[0]:
-                raise ValueError("weights should be of length of input data")
+                raise ValueError(f"Weights should be same length as input data! I got {len(self.weights)}")
             # Normalize to sum to 1
             self.weights /= self.weights.sum()
 
