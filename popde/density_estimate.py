@@ -83,9 +83,10 @@ class SimpleKernelDensityEstimation:
                 raise ValueError(f"Weights should be one-dimensional! I got {self.weights.ndim} dimensions")
             if len(self.weights) != self.data.shape[0]:
                 raise ValueError(f"Weights should be same length as input data! I got {len(self.weights)}")
-            # Normalize if 'large' or 'small': NB we allow some weights to be small if others are order(1)
-            if self.weights.max() > 100. or self.weights.max() < 0.01:
-                self.normalize_weights()
+            ## Normalize if 'large' or 'small': NB we allow some weights to be small if others are order(1)
+            #if self.weights.max() > 100. or self.weights.max() < 0.01:
+            # Commented out as it's not clear if we ever need the 'unnormalized' case.
+            self.normalize_weights()
 
         # Do transformation, standardize and rescale input data
         self.prepare_data()
