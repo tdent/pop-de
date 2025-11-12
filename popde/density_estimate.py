@@ -449,13 +449,13 @@ class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
             raise ValueError("Can't specify rescaling for this class!")
 
         # Initialize as for KDEpy, but by default do not fit KDE to begin with
-        super().__init__(data, weights, input_transf, stdize, symmetrize_dims,
-                         rescale, backend, bandwidth, dim_names, do_fit)
+        super().__init__(data, weights, input_transf, stdize, rescale, 
+                         symmetrize_dims, backend, bandwidth, dim_names, do_fit)
 
         # Use bandwidth formula to rescale dimensions
         self.rescale = 1. / self.calc_ndim_bandwidth(bandwidth_method)
 
         # Keep input bandwidth (may be variable/adaptive) and proceed to fit KDE
-        super().__init__(data, weights, input_transf, stdize, symmetrize_dims,
-                         self.rescale, backend, bandwidth, dim_names,
+        super().__init__(data, weights, input_transf, stdize, self.rescale,
+                         symmetrize_dims, backend, bandwidth, dim_names,
                          do_fit=True)
