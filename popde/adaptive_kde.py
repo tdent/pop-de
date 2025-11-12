@@ -36,7 +36,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
     print(density_values)
     """
     def __init__(self, data, weights, input_transf=None, stdize=False,
-                 rescale=None, backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None,
+                 rescale=None, symmetrize_dims=None,
+                 backend='KDEpy', bandwidth=1., alpha=0.5, dim_names=None,
                  do_fit=True):
         self.alpha = alpha
         self.global_bandwidth = bandwidth
@@ -45,11 +46,12 @@ class AdaptiveBwKDE(VariableBwKDEPy):
 
         # Set up pilot KDE with fixed bandwidth
         # If do_fit is True, fit the pilot KDE; if not, just initialize
-        self.pilot_kde = VariableBwKDEPy(data, weights, input_transf, stdize, rescale,
-                                         backend, bandwidth, dim_names, do_fit)
+        self.pilot_kde = VariableBwKDEPy(data, weights, input_transf, stdize,
+                                         rescale, symmetrize_dims, backend,
+                                         bandwidth, dim_names, do_fit)
         # Initialize the adaptive KDE
-        super().__init__(data, weights, input_transf, stdize, rescale, backend,
-                         bandwidth, dim_names, do_fit=False)
+        super().__init__(data, weights, input_transf, stdize, rescale, symmetrize_dims,
+                         backend, bandwidth, dim_names, do_fit=False)
         # Special initial fit method
         # Note that self.fit() is inherited from the parent & uses self.bandwidth directly
         if self.do_fit:
@@ -142,23 +144,29 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
     Optimize bandwidth and alpha by grid search using
     cross validation with a log likelihood figure of merit
     """
-    def __init__(self, data, bandwidth_options, alpha_options, weights=None, input_transf=None,
-                 stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.0,
-                 dim_names=None, do_fit=False, n_splits=2):
+    def __init__(self, data, bandwidth_options, alpha_options, weights=None,
+                 input_transf=None, stdize=False, rescale=None, symmetrize_dims=None,
+                 backend='KDEpy', bandwidth=1.0, alpha=0.0, dim_names=None,
+                 do_fit=False, n_splits=2):
         self.alpha_options = alpha_options
         self.bandwidth_options = bandwidth_options
         self.n_splits = n_splits
+        self.symm_dims = symmetrize_dims  # Will need in cross-validation
 
-        super().__init__(data, weights, input_transf, stdize, rescale, backend,
-                         bandwidth, alpha, dim_names, do_fit)
+        super().__init__(data, weights, input_transf, stdize, rescale, symmetrize_dims,
+                         backend, bandwidth, alpha, dim_names, do_fit)
 
     def loo_cv_score(self, bw_val, alpha_val):
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut()
         fom = 0.
+        # FIXME - Use original data without symmetry to do LOO split, then apply symmetry
+        # when setting up the training KDE
+        # Also, should train_data be based on self.kde_data *and* then have input transf,
+        # etc. applied ??
         for train_index, test_index in loo.split(self.kde_data):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
-            local_weights = None # FIX ME
+            local_weights = None # FIXME - see KDERescaleOptimization
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=self.rescale,
                                   bandwidth=bw_val, alpha=alpha_val)
@@ -172,9 +180,13 @@ class AdaptiveKDEOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
+        # FIXME - Use original data without symmetry to do LOO split, then apply symmetry
+        # when setting up the training KDE
+        # Also, should train_data be based on self.kde_data *and* then have input transf,
+        # etc. applied ??
         for train_index, test_index in kf.split(self.kde_data):
             train_data, test_data = self.kde_data[train_index], self.kde_data[test_index]
-            local_weights = None # FIX ME
+            local_weights = None # FIXME - see KDERescaleOptimization
             awkde = AdaptiveBwKDE(train_data, local_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=self.rescale,
                                   bandwidth=bw_val, alpha=alpha_val)
@@ -248,8 +260,9 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         optimize_rescale_parameters
             Optimizes rescaling factors and alpha parameter.
     """
-    def __init__(self, data, weights=None, input_transf=None,
-                 stdize=False, rescale=None, backend='KDEpy', bandwidth=1.0, alpha=0.5,
+    def __init__(self, data, weights=None, input_transf=None, stdize=False,
+                 rescale=None, symmetrize_dims=None, backend='KDEpy',
+                 bandwidth=1.0, alpha=0.5,
                  dim_names=None, do_fit=False, n_splits=5):
         """
         Args inherited from parent class, except for the following:
@@ -259,11 +272,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             n_splits (int, optional): Number of splits for k-fold cross-validation.
         """
         self.n_splits = n_splits
-        super().__init__(data, weights, input_transf, stdize, rescale, backend,
-                         bandwidth, alpha, dim_names, do_fit)
+        self.symm_dims = symmetrize_dims
+
+        super().__init__(data, weights, input_transf, stdize, rescale,
+                         symmetrize_dims, backend, bandwidth, alpha, dim_names,
+                         do_fit)
         # Allow for weights not to be specified
         if self.weights is None:
             self.weights = np.ones(self.data.shape[0])
+            self.kde_weights = self.weights / self.weights.sum()
 
     def set_rescale(self, new_rescale):
         """
@@ -277,10 +294,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         self.rescale = new_rescale
         # Re-initialize KDE data
         self.prepare_data()
+        if self.symm_dims is not None:
+            self.symmetrize_data(self.symm_dims)       
+
         # Re-initialize pilot KDE with new parameters and re-fit if requested
         self.pilot_kde = VariableBwKDEPy(self.data, self.weights, self.input_transf,
-                                         self.stdize, self.rescale, self.backend,
-                                         self.bandwidth, self.dim_names, do_fit=self.do_fit)
+                                         self.stdize, self.rescale, self.symm_dims,
+                                         self.backend, self.bandwidth, self.dim_names,
+                                         do_fit=self.do_fit)
 
     def loo_cv_score(self, rescale_factors_alpha):
         """
@@ -298,18 +319,21 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut()
         fom = 0.
-        # Use original data for KDE evaluation to avoid rescaling biases in ln L
+        # Use original data & weights for KDE evaluation to avoid rescaling biases in ln L
+        # Also ensure that training data are symmetrized independently of test data
         for train_index, test_index in loo.split(self.data):
-            train_weights, test_weights = self.weights[train_index], self.weights[test_index]
+            train_weights, test_weight = self.weights[train_index], self.weights[test_index]
             # If test event has weight 0, do nothing
-            if test_weights.sum() == 0.:
+            if test_weight.sum() == 0.:
                 continue
             train_data, test_data = self.data[train_index], self.data[test_index]
             awkde = AdaptiveBwKDE(train_data, train_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_val,
+                                  symmetrize_dims=self.symm_dims,
                                   bandwidth=self.bandwidth, alpha=alpha_val)
+            # No need to symmetrize test data, as FOM values will be identical
             # Weight is a length 1 array for LOO
-            fom += test_weights[0] * np.log(awkde.evaluate_with_transf(test_data))
+            fom += test_weight[0] * np.log(awkde.evaluate_with_transf(test_data))
 
         return -fom
 
@@ -331,13 +355,16 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
-        # Use original data for KDE evaluation to avoid rescaling biases in ln L
+        # Use original data & weights for KDE evaluation to avoid rescaling biases in ln L
+        # Also ensure that training data are symmetrized independently of test data
         for train_index, test_index in kf.split(self.data):
             train_weights, test_weights = self.weights[train_index], self.weights[test_index]
             train_data, test_data = self.data[train_index], self.data[test_index]
             awkde = AdaptiveBwKDE(train_data, train_weights, input_transf=self.input_transf,
                                   stdize=self.stdize, rescale=rescale_val,
+                                  symmetrize_dims=self.symm_dims,
                                   bandwidth=self.bandwidth, alpha=alpha_val)
+            # No need to symmetrize test data, as FOM values will be identical
             log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
             # Weighted sum of per-event log likelihoods
             fom.append((test_weights * log_kde_eval).sum())
@@ -390,6 +417,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
 class AdaptiveKDELeaveOneOutCrossValidation():
     """
+    LEGACY CODE (uses awkde, from before density_estimation.py was written)
+
     A class that given input values of observations and a choice of
     bandwidth and adaptive parameter values, optimizes the parameters
     using leave-one-out cross validation and evaluates the density
