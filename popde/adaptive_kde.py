@@ -96,14 +96,7 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         pilot_values : array-like
             The pilot KDE values at the data point positions.
         """
-        # Calculate bandwidth for each point
-        per_point_bw = self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
-        # If data was symmetrized, double the bandwidth array to match doubled data
-        # Check if kde_data is doubled compared to original data
-        if hasattr(self, 'data') and len(self.kde_data) == 2 * len(self.data):
-            per_point_bw = np.tile(per_point_bw, 2)
-
-        self.set_bandwidth(per_point_bw)
+        self.set_bandwidth(self.global_bandwidth / self._local_bandwidth_factor(pilot_values))
 
 
     def set_alpha(self, new_alpha):

@@ -88,6 +88,9 @@ class SimpleKernelDensityEstimation:
             #if self.weights.max() > 100. or self.weights.max() < 0.01:
             # Commented out as it's not clear if we ever need the 'unnormalized' case.
             self.normalize_weights()
+        else:
+            # Initialize uniform weights if not provided
+            self.kde_weights = None
 
         # Do transformation, standardize and rescale input data
         self.prepare_data()
