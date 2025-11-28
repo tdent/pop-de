@@ -172,8 +172,6 @@ class SimpleKernelDensityEstimation:
         if self.weights is not None:
             self.kde_weights = np.tile(self.kde_weights, 2)
 
-
-
     def fit(self):
         """
         General fit method allowing for different backends
