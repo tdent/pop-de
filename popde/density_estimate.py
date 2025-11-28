@@ -1,6 +1,7 @@
 import numpy as np
 from . import transform_utils as transf
 
+
 class SimpleKernelDensityEstimation:
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
