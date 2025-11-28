@@ -1,7 +1,6 @@
 import numpy as np
 from . import transform_utils as transf
 
-
 class SimpleKernelDensityEstimation:
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
@@ -169,6 +168,8 @@ class SimpleKernelDensityEstimation:
         # If weights exist, also double the kde_weights array
         if self.weights is not None:
             self.kde_weights = np.tile(self.kde_weights, 2)
+
+
 
     def fit(self):
         """
@@ -420,6 +421,24 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         density_values = self.kernel_estimate.evaluate(points)
 
         return density_values
+
+    def symmetrize_data(self, dims):
+        """
+        Override parent method to also handle per-point bandwidth arrays.
+        Augment kde_data with a copy exchanging values between the two indexed
+        dimensions, and also double the bandwidth array if it's per-point.
+        """
+        # Call parent's symmetrize_data to handle data and weights
+        super().symmetrize_data(dims)
+
+        # Now handle bandwidth if it's an array
+        # Check if bandwidth is array-like (not a scalar)
+        if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
+            bw_array = np.asarray(self.bandwidth)
+            # Only double if it's a 1D array matching original data length
+            if bw_array.ndim == 1 and len(bw_array) == len(self.kde_data) // 2:
+                # Double the bandwidth array to match doubled data
+                self.bandwidth = np.tile(bw_array, 2)
 
 
 class MultiDimRescalingBwKDEPy(VariableBwKDEPy):

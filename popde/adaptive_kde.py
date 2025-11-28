@@ -96,9 +96,15 @@ class AdaptiveBwKDE(VariableBwKDEPy):
         pilot_values : array-like
             The pilot KDE values at the data point positions.
         """
-        self.set_bandwidth(
-            self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
-        )
+        # Calculate bandwidth for each point
+        per_point_bw = self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
+        # If data was symmetrized, double the bandwidth array to match doubled data
+        # Check if kde_data is doubled compared to original data
+        if hasattr(self, 'data') and len(self.kde_data) == 2 * len(self.data):
+            per_point_bw = np.tile(per_point_bw, 2)
+
+        self.set_bandwidth(per_point_bw)
+
 
     def set_alpha(self, new_alpha):
         """
@@ -295,7 +301,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         # Re-initialize KDE data
         self.prepare_data()
         if self.symm_dims is not None:
-            self.symmetrize_data(self.symm_dims)       
+            self.symmetrize_data(self.symm_dims)
+            # If bandwidth is per-point array, double it after symmetrization
+            if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
+                bw_array = np.asarray(self.bandwidth)
+                # Only double if it matches original data length (hasn't been doubled yet)
+                if bw_array.ndim == 1 and len(bw_array) == len(self.data):
+                    self.bandwidth = np.tile(bw_array, 2)
+
 
         # Re-initialize pilot KDE with new parameters and re-fit if requested
         self.pilot_kde = VariableBwKDEPy(self.data, self.weights, self.input_transf,
