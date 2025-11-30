@@ -409,16 +409,24 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
                          symmetrize_dims, backend, bandwidth, dim_names, do_fit)
 
     def symmetrize_data(self, dims):
-    """Symmetrize KDE data and, if needed, duplicate per-point bandwidths."""
-    super().symmetrize_data(dims)
+        """Symmetrize KDE data and duplicate per-point bandwidths if provided."""
+        super().symmetrize_data(dims)
 
-    # If bandwidth is per-point, it must be duplicated to match doubled data
-    if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
-        bw = np.asarray(self.bandwidth)
-        assert bw_array.ndim == 1, "bandwidth must be a 1D per-point array"
-        original_n = len(self.kde_data) // 2
+        if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
+            bw = np.asarray(self.bandwidth)
 
-        if bw.ndim == 1 and len(bw) == original_n:
+            if bw.ndim != 1:
+                raise ValueError(
+                    f"bandwidth must be 1D if array-like, got ndim={bw.ndim}"
+                )
+
+            if len(bw) != len(self.data):
+                raise ValueError(
+                    f"per-point bandwidth length must match original data length "
+                    f"({len(self.data)}), got {len(bw)}"
+                )
+
+            # data was doubled by symmetrize_data, so bandwidth must be doubled too
             self.bandwidth = np.tile(bw, 2)
 
     def fit_KDEpy(self):
