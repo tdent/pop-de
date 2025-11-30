@@ -409,6 +409,18 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         super().__init__(data, weights, input_transf, stdize, rescale,
                          symmetrize_dims, backend, bandwidth, dim_names, do_fit)
 
+    def symmetrize_data(self, dims):
+    """Symmetrize KDE data and, if needed, duplicate per-point bandwidths."""
+    super().symmetrize_data(dims)
+
+    # If bandwidth is per-point, it must be duplicated to match doubled data
+    if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
+        bw = np.asarray(self.bandwidth)
+        original_n = len(self.kde_data) // 2
+
+        if bw.ndim == 1 and len(bw) == original_n:
+            self.bandwidth = np.tile(bw, 2)
+
     def fit_KDEpy(self):
         from KDEpy.TreeKDE import TreeKDE
 
@@ -422,18 +434,6 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         density_values = self.kernel_estimate.evaluate(points)
 
         return density_values
-
-    def symmetrize_data(self, dims):
-    """Symmetrize KDE data and, if needed, duplicate per-point bandwidths."""
-    super().symmetrize_data(dims)
-
-    # If bandwidth is per-point, it must be duplicated to match doubled data
-    if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
-        bw = np.asarray(self.bandwidth)
-        original_n = len(self.kde_data) // 2
-
-        if bw.ndim == 1 and len(bw) == original_n:
-            self.bandwidth = np.tile(bw, 2)
 
 
 class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
