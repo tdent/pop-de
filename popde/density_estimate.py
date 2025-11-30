@@ -1,7 +1,6 @@
 import numpy as np
 from . import transform_utils as transf
 
-
 class SimpleKernelDensityEstimation:
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
@@ -416,6 +415,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
     # If bandwidth is per-point, it must be duplicated to match doubled data
     if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
         bw = np.asarray(self.bandwidth)
+        assert bw_array.ndim == 1, "bandwidth must be a 1D per-point array"
         original_n = len(self.kde_data) // 2
 
         if bw.ndim == 1 and len(bw) == original_n:
