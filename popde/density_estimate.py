@@ -424,22 +424,16 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         return density_values
 
     def symmetrize_data(self, dims):
-        """
-        Override parent method to also handle per-point bandwidth arrays.
-        Augment kde_data with a copy exchanging values between the two indexed
-        dimensions, and also double the bandwidth array if it's per-point.
-        """
-        # Call parent's symmetrize_data to handle data and weights
-        super().symmetrize_data(dims)
+    """Symmetrize KDE data and, if needed, duplicate per-point bandwidths."""
+    super().symmetrize_data(dims)
 
-        # Now handle bandwidth if it's an array
-        # Check if bandwidth is array-like (not a scalar)
-        if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
-            bw_array = np.asarray(self.bandwidth)
-            # Only double if it's a 1D array matching original data length
-            if bw_array.ndim == 1 and len(bw_array) == len(self.kde_data) // 2:
-                # Double the bandwidth array to match doubled data
-                self.bandwidth = np.tile(bw_array, 2)
+    # If bandwidth is per-point, it must be duplicated to match doubled data
+    if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
+        bw = np.asarray(self.bandwidth)
+        original_n = len(self.kde_data) // 2
+
+        if bw.ndim == 1 and len(bw) == original_n:
+            self.bandwidth = np.tile(bw, 2)
 
 
 class MultiDimRescalingBwKDEPy(VariableBwKDEPy):
