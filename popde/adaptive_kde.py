@@ -417,7 +417,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             options=opt_kwargs  # Pass on additional options as a dictionary
         )
 
-        #if using mass dim get back banwidth with insert option 
+        #if using mass dim get back bandwidth with insert option 
         if self.uniform_rescale:
             bw_mass = result.x[0]
             result.x = np.insert(result.x, 0 , bw_mass)#add at zeroth location the bw 
