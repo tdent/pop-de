@@ -426,7 +426,7 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
                     f"({len(self.data)}), got {len(bw)}"
                 )
 
-            # data was doubled by symmetrize_data, so bandwidth must be doubled too
+            # Duplicate bandwidth array to match the symmetrized data
             self.bandwidth = np.tile(bw, 2)
 
     def fit_KDEpy(self):
