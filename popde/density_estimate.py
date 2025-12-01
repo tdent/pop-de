@@ -1,7 +1,6 @@
 import numpy as np
 from . import transform_utils as transf
 
-
 class SimpleKernelDensityEstimation:
     """
     Fit and evaluate multi-dimensional Kernel Density Estimation (KDE)
@@ -89,6 +88,8 @@ class SimpleKernelDensityEstimation:
             #if self.weights.max() > 100. or self.weights.max() < 0.01:
             # Commented out as it's not clear if we ever need the 'unnormalized' case.
             self.normalize_weights()
+        else:
+            self.kde_weights = None
 
         # Do transformation, standardize and rescale input data
         self.prepare_data()
@@ -406,6 +407,27 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         # Arguments stay in same order
         super().__init__(data, weights, input_transf, stdize, rescale,
                          symmetrize_dims, backend, bandwidth, dim_names, do_fit)
+
+    def symmetrize_data(self, dims):
+        """Symmetrize KDE data and duplicate per-point bandwidths if provided."""
+        super().symmetrize_data(dims)
+
+        if isinstance(self.bandwidth, (list, tuple, np.ndarray)):
+            bw = np.asarray(self.bandwidth)
+
+            if bw.ndim != 1:
+                raise ValueError(
+                    f"bandwidth must be 1D if array-like, got ndim={bw.ndim}"
+                )
+
+            if len(bw) != len(self.data):
+                raise ValueError(
+                    f"per-point bandwidth length must match original data length "
+                    f"({len(self.data)}), got {len(bw)}"
+                )
+
+            # Duplicate bandwidth array to match the symmetrized data
+            self.bandwidth = np.tile(bw, 2)
 
     def fit_KDEpy(self):
         from KDEpy.TreeKDE import TreeKDE

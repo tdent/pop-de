@@ -295,7 +295,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         # Re-initialize KDE data
         self.prepare_data()
         if self.symm_dims is not None:
-            self.symmetrize_data(self.symm_dims)       
+            self.symmetrize_data(self.symm_dims)
 
         # Re-initialize pilot KDE with new parameters and re-fit if requested
         self.pilot_kde = VariableBwKDEPy(self.data, self.weights, self.input_transf,
