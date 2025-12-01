@@ -97,8 +97,8 @@ class AdaptiveBwKDE(VariableBwKDEPy):
             The pilot KDE values at the data point positions.
         """
         self.set_bandwidth(
-                self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
-                )
+            self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
+         )
 
     def set_alpha(self, new_alpha):
         """
