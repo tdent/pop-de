@@ -100,7 +100,6 @@ class AdaptiveBwKDE(VariableBwKDEPy):
                 self.global_bandwidth / self._local_bandwidth_factor(pilot_values)
                 )
 
-
     def set_alpha(self, new_alpha):
         """
         Set the adaptive parameter alpha to a new value and re-initialize KDE.
