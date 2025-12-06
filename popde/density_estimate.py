@@ -408,6 +408,8 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
         # Arguments stay in same order
         super().__init__(data, weights, input_transf, stdize, rescale,
                          symmetrize_dims, backend, bandwidth, dim_names, do_fit)
+        # Only TreeKDE currently used
+        from KDEpy.TreeKDE import TreeKDE
 
     def symmetrize_data(self, dims):
         """Symmetrize KDE data and duplicate per-point bandwidths if provided."""
@@ -431,8 +433,6 @@ class VariableBwKDEPy(SimpleKernelDensityEstimation):
             self.bandwidth = np.tile(bw, 2)
 
     def fit_KDEpy(self):
-        from KDEpy.TreeKDE import TreeKDE
-
         # Bandwidth may be array-like with size n_samples
         self.kernel_estimate = TreeKDE(bw=self.bandwidth).fit(
             self.kde_data,
