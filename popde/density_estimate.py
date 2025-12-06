@@ -167,6 +167,7 @@ class SimpleKernelDensityEstimation:
         assert(extra_data.shape == self.kde_data.shape), extra_data.shape
         # Combine into one array and replace self.data
         self.kde_data = np.vstack((self.kde_data, extra_data))
+
         # If weights exist, also double the kde_weights array
         if self.weights is not None:
             self.kde_weights = np.tile(self.kde_weights, 2)
