@@ -78,25 +78,18 @@ class SimpleKernelDensityEstimation:
 
         self.weights = weights  # Keep track of original weights assignment
         if self.weights is not None:
-            # Check the array
-            self.kde_weights = np.atleast_1d(weights).astype(float)
-            if self.kde_weights.ndim != 1:
-                raise ValueError(f"Weights should be one-dimensional! I got {self.weights.ndim} dimensions")
-            if len(self.kde_weights) != self.data.shape[0]:
-                raise ValueError(f"Weights should be same length as input data! I got {len(self.weights)}")
-            ## Normalize if 'large' or 'small': NB we allow some weights to be small if others are order(1)
-            #if self.weights.max() > 100. or self.weights.max() < 0.01:
-            # Commented out as it's not clear if we ever need the 'unnormalized' case.
-            self.normalize_weights()
+            self.prepare_weights()
         else:
             self.kde_weights = None
 
-        # Do transformation, standardize and rescale input data
-        self.prepare_data()
+        self.kde_data = self.data  # Keep self.data for original, transform self.kde_data
 
         # Symmetrize if wanted
         if symmetrize_dims is not None:
             self.symmetrize_data(symmetrize_dims)
+
+        # Do transformation, standardize and rescale input data
+        self.prepare_data()
 
         self.kernel_estimate = None
         # Initialize the KDE
@@ -106,6 +99,18 @@ class SimpleKernelDensityEstimation:
     def normalize_weights(self):
         """Make them sum to 1.  May be useful for very small or very large weights"""
         self.kde_weights /= self.kde_weights.sum()
+
+    def prepare_weights(self):
+        """
+        Check and normalize weights
+        """
+        # Check the array
+        self.kde_weights = np.atleast_1d(self.weights).astype(float)
+        if self.kde_weights.ndim != 1:
+            raise ValueError(f"Weights should be one-dimensional! I got {self.weights.ndim} dimensions")
+        if len(self.kde_weights) != self.data.shape[0]:
+            raise ValueError(f"Weights should be same length as input data! I got {len(self.weights)}")
+        self.normalize_weights()
 
     def check_dimensionality(self):
         """
@@ -124,27 +129,6 @@ class SimpleKernelDensityEstimation:
             if len(self.rescale) != self.ndim:
                 raise ValueError("Dimensionality of data array does not match "
                                  "the number of rescaling factors.")
-
-    def prepare_data(self):
-        """
-        Transform, standardize and rescale input data into KDE-ready data
-        """
-        if self.input_transf is not None:
-            self.transf_data = transf.transform_data(self.data, self.input_transf)
-        else:
-            self.transf_data = self.data
-
-        if self.stdize:
-            std_transf = ['stdize'] * self.ndim
-            self.stds = np.std(self.transf_data, axis=0)  # record the stds
-            self.std_data = transf.transform_data(self.transf_data, std_transf)
-        else:
-            self.std_data = self.transf_data
-
-        if self.rescale is not None:
-            self.kde_data = transf.transform_data(self.std_data, self.rescale)
-        else:
-            self.kde_data = self.std_data
 
     def symmetrize_data(self, dims):
         """
@@ -165,12 +149,33 @@ class SimpleKernelDensityEstimation:
 
         extra_data = np.vstack(extra_data).T  # Stick arrays together
         assert(extra_data.shape == self.kde_data.shape), extra_data.shape
-        # Combine into one array and replace self.data
+        # Combine into one array and replace self.kde_data
         self.kde_data = np.vstack((self.kde_data, extra_data))
 
         # If weights exist, also double the kde_weights array
         if self.weights is not None:
             self.kde_weights = np.tile(self.kde_weights, 2)
+    
+    def prepare_data(self):
+        """
+        Transform, standardize and rescale input data into KDE-ready data
+        """
+        if self.input_transf is not None:
+            self.transf_data = transf.transform_data(self.kde_data, self.input_transf)
+        else:
+            self.transf_data = self.kde_data
+
+        if self.stdize:
+            std_transf = ['stdize'] * self.ndim
+            self.stds = np.std(self.transf_data, axis=0)  # record the stds
+            self.std_data = transf.transform_data(self.transf_data, std_transf)
+        else:
+            self.std_data = self.transf_data
+
+        if self.rescale is not None:  # Finally reassign self.kde_data
+            self.kde_data = transf.transform_data(self.std_data, self.rescale)
+        else:
+            self.kde_data = self.std_data
 
     def fit(self):
         """
