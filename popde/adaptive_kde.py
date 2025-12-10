@@ -274,13 +274,13 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         self.n_splits = n_splits
         self.symm_dims = symmetrize_dims
 
+        # Allow for weights not to be specified
+        if weights is None:
+            weights = np.ones(data.shape[0])
+
         super().__init__(data, weights, input_transf, stdize, rescale,
                          symmetrize_dims, backend, bandwidth, alpha, dim_names,
                          do_fit)
-        # Allow for weights not to be specified
-        if self.weights is None:
-            self.weights = np.ones(self.data.shape[0])
-            self.kde_weights = self.weights / self.weights.sum()
 
     def set_rescale(self, new_rescale):
         """
@@ -292,10 +292,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             New rescaling factors.
         """
         self.rescale = new_rescale
-        # Re-initialize KDE data
-        self.prepare_data()
+
+        # Re-initialize KDE data as in init
+        if self.weights is not None:
+            self.prepare_weights()
+        self.kde_data = self.data
         if self.symm_dims is not None:
             self.symmetrize_data(self.symm_dims)
+        self.prepare_data()
 
         # Re-initialize pilot KDE with new parameters and re-fit if requested
         self.pilot_kde = VariableBwKDEPy(self.data, self.weights, self.input_transf,
