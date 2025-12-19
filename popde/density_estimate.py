@@ -132,8 +132,8 @@ class SimpleKernelDensityEstimation:
 
     def symmetrize_data(self, dims):
         """
-        Augment kde_data with a copy exchanging values between the two indexed
-        dimensions.  Ex. m_1 <-> m_2 symmetry
+        Augment kde_data and weights with a copy exchanging values between the
+        two indexed dimensions.  Ex. m_1 <-> m_2 symmetry
         """
         assert len(dims) == 2, \
             f"Need exactly 2 indices for symmetrizing data, got {len(dims)}"
@@ -155,7 +155,7 @@ class SimpleKernelDensityEstimation:
         # If weights exist, also double the kde_weights array
         if self.weights is not None:
             self.kde_weights = np.tile(self.kde_weights, 2)
-    
+
     def prepare_data(self):
         """
         Transform, standardize and rescale input data into KDE-ready data
