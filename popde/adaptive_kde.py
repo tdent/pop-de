@@ -247,7 +247,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         alpha (float): Initial alpha parameter for rescaling.
         bandwidth (float): Fixed bandwidth, default set to 1.0.
         n_splits (int): Number of splits for k-fold cross-validation.
-        bandwidth_prior_beta (float): Beta parameter for bandwidth prior penalty.
+        bandwidth_prior_beta (float): Beta parameter for bandwidth prior.
 
     Methods:
         set_rescale
@@ -277,13 +277,13 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         self.symm_dims = symmetrize_dims
         self.bandwidth_prior_beta = bandwidth_prior_beta
 
+        # Allow for weights not to be specified
+        if weights is None:
+            weights = np.ones(data.shape[0])
+
         super().__init__(data, weights, input_transf, stdize, rescale,
                          symmetrize_dims, backend, bandwidth, alpha, dim_names,
                          do_fit)
-        # Allow for weights not to be specified
-        if self.weights is None:
-            self.weights = np.ones(self.data.shape[0])
-            self.kde_weights = self.weights / self.weights.sum()
 
     def set_rescale(self, new_rescale):
         """
@@ -295,10 +295,14 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             New rescaling factors.
         """
         self.rescale = new_rescale
-        # Re-initialize KDE data
-        self.prepare_data()
+
+        # Re-initialize KDE data as in init
+        if self.weights is not None:
+            self.prepare_weights()
+        self.kde_data = self.data
         if self.symm_dims is not None:
             self.symmetrize_data(self.symm_dims)
+        self.prepare_data()
 
         # Re-initialize pilot KDE with new parameters and re-fit if requested
         self.pilot_kde = VariableBwKDEPy(self.data, self.weights, self.input_transf,
@@ -319,6 +323,12 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         """
         rescale_val = rescale_factors_alpha[:-1]
         alpha_val = rescale_factors_alpha[-1]
+        # For symmetrization, make another copy of the value for the first symm dimension
+        # and insert it after this dim in the rescale array
+        if self.symm_dims is not None:
+            val_to_copy = rescale_val[self.symm_dims[0]]
+            rescale_val = np.insert(rescale_val, self.symm_dims[1], val_to_copy)
+
         from sklearn.model_selection import LeaveOneOut
         loo = LeaveOneOut()
         fom = 0.
@@ -338,9 +348,9 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             # Weight is a length 1 array for LOO
             fom += test_weight[0] * np.log(awkde.evaluate_with_transf(test_data))
 
-        # Add bandwidth prior penalty
+        # Add bandwidth prior term
         if self.bandwidth_prior_beta is not None:
-            fom += -self.bandwidth_prior_beta * np.sum(np.log(rescale_val))
+            fom += -self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
 
         return -fom
 
@@ -359,6 +369,12 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         """
         rescale_val = rescale_factors_alpha[:-1]
         alpha_val = rescale_factors_alpha[-1]
+        # For symmetrization, make another copy of the value for the first symm dimension
+        # and insert it after this dim in the rescale array
+        if self.symm_dims is not None:
+            val_to_copy = rescale_val[self.symm_dims[0]]
+            rescale_val = np.insert(rescale_val, self.symm_dims[1], val_to_copy)
+
         from sklearn.model_selection import KFold
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=seed)
         fom = []
@@ -377,9 +393,9 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             fom.append((test_weights * log_kde_eval).sum())
 
         total_fom = sum(fom)
-        # Add bandwidth prior penalty
+        # Add bandwidth prior term
         if self.bandwidth_prior_beta is not None:
-            total_fom += -self.bandwidth_prior_beta * np.sum(np.log(rescale_val))
+            total_fom += -self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
         
         return -total_fom
 
@@ -389,6 +405,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         """
         Given initial choices of rescale factors in each dimension and alpha,
         perform optimization with a cross-validated log likelihood FOM
+
+        Returns optimized rescale factors, optimized alpha and FOM value
         """
         # Default bounds : alpha must be between 0, 1
         if bounds is None:
@@ -402,6 +420,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             init_alpha = self.alpha
         # Insert alpha at the end of the array
         initial_choices = np.insert(init_rescale, init_rescale.size, init_alpha)
+
+        # For symmetrization, check that the dimensions are treated the same and 
+        # then remove one of them from the opt parameters
+        if self.symm_dims is not None:
+            firstdim = self.symm_dims[0]; secondim = self.symm_dims[1]
+            assert init_rescale[firstdim] == init_rescale[secondim]
+            assert bounds[firstdim] == bounds[secondim]
+            initial_choices = np.delete(initial_choices, secondim)
+            bounds = list(bounds); bounds.pop(secondim)
 
         try:
             score_fn = {
@@ -421,10 +448,15 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         )
 
         # Set instance KDE parameters from the optimized results
-        self.set_rescale(result.x[:-1])
+        rescales = result.x[:-1]
+        # Symmetrization case: copy the rescale value from first dim to second
+        if self.symm_dims is not None:
+            val_to_copy = rescales[firstdim]
+            rescales = np.insert(rescales, secondim, val_to_copy)
+        self.set_rescale(rescales)
         self.set_alpha(result.x[-1])  # Set alpha and re-fit KDEs
 
-        return result.x, result.fun
+        return rescales, result.x[-1], result.fun
 
 
 class AdaptiveKDELeaveOneOutCrossValidation():
