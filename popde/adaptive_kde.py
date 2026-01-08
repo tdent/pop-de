@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
-from .density_estimate import VariableBwKDEPy
+#from .density_estimate import VariableBwKDEPy
+from density_estimate import VariableBwKDEPy
 from scipy.stats import gmean
 
 
@@ -350,7 +351,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
         # Add bandwidth prior term
         if self.bandwidth_prior_beta is not None:
-            fom += -self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
+            fom += -len(self.data)*self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
 
         return -fom
 
@@ -395,7 +396,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         total_fom = sum(fom)
         # Add bandwidth prior term
         if self.bandwidth_prior_beta is not None:
-            total_fom += -self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
+            total_fom += -len(self.data) * self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
         
         return -total_fom
 
