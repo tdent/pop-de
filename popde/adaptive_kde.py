@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
-from .density_estimate import VariableBwKDEPy
+#from .density_estimate import VariableBwKDEPy
+from density_estimate import VariableBwKDEPy
 from scipy.stats import gmean
 
 
@@ -247,6 +248,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         alpha (float): Initial alpha parameter for rescaling.
         bandwidth (float): Fixed bandwidth, default set to 1.0.
         n_splits (int): Number of splits for k-fold cross-validation.
+        bandwidth_prior_beta (float): Beta parameter for bandwidth prior.
 
     Methods:
         set_rescale
@@ -263,16 +265,18 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     def __init__(self, data, weights=None, input_transf=None, stdize=False,
                  rescale=None, symmetrize_dims=None, backend='KDEpy',
                  bandwidth=1.0, alpha=0.5,
-                 dim_names=None, do_fit=False, n_splits=5):
+                 dim_names=None, do_fit=False, n_splits=5, bandwidth_prior_beta=None):
         """
         Args inherited from parent class, except for the following:
             rescale (array-like, optional): Initial rescale factors for each dimension.
             bandwidth (float, optional): Fixed bandwidth value, default is 1.0.
             alpha (float, optional): Initial alpha value.
             n_splits (int, optional): Number of splits for k-fold cross-validation.
+            bandwidth_prior_beta (float, optional): Beta parameter for bandwidth prior.
         """
         self.n_splits = n_splits
         self.symm_dims = symmetrize_dims
+        self.bandwidth_prior_beta = bandwidth_prior_beta
 
         # Allow for weights not to be specified
         if weights is None:
@@ -345,6 +349,10 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             # Weight is a length 1 array for LOO
             fom += test_weight[0] * np.log(awkde.evaluate_with_transf(test_data))
 
+        # Add bandwidth prior term
+        if self.bandwidth_prior_beta is not None:
+            fom += -len(self.data)*self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
+
         return -fom
 
     def kfold_cv_score(self, rescale_factors_alpha, seed=42):
@@ -385,7 +393,12 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             # Weighted sum of per-event log likelihoods
             fom.append((test_weights * log_kde_eval).sum())
 
-        return -sum(fom)
+        total_fom = sum(fom)
+        # Add bandwidth prior term
+        if self.bandwidth_prior_beta is not None:
+            total_fom += -len(self.data) * self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
+        
+        return -total_fom
 
     def optimize_rescale_parameters(self, init_rescale=None, init_alpha=None,
                                     cv_method='kfold_cv', opt_method='Nelder-Mead',
