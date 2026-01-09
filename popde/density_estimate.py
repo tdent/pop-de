@@ -63,7 +63,6 @@ class SimpleKernelDensityEstimation:
         """
         if len(data.shape) != 2:
             raise ValueError("Data must have shape (n_samples, n_features).")
-        self.ndim = data.shape[1]
 
         self.data = np.asarray(data)
         self.ndim = self.data.shape[1]
