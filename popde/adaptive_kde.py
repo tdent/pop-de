@@ -247,6 +247,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         alpha (float): Initial alpha parameter for rescaling.
         bandwidth (float): Fixed bandwidth, default set to 1.0.
         n_splits (int): Number of splits for k-fold cross-validation.
+        bandwidth_prior (float): Bandwidth prior parameter.
 
     Methods:
         set_rescale
@@ -263,16 +264,18 @@ class KDERescaleOptimization(AdaptiveBwKDE):
     def __init__(self, data, weights=None, input_transf=None, stdize=False,
                  rescale=None, symmetrize_dims=None, backend='KDEpy',
                  bandwidth=1.0, alpha=0.5,
-                 dim_names=None, do_fit=False, n_splits=5):
+                 dim_names=None, do_fit=False, n_splits=5, bandwidth_prior=None):
         """
         Args inherited from parent class, except for the following:
             rescale (array-like, optional): Initial rescale factors for each dimension.
             bandwidth (float, optional): Fixed bandwidth value, default is 1.0.
             alpha (float, optional): Initial alpha value.
             n_splits (int, optional): Number of splits for k-fold cross-validation.
+            bandwidth_prior (float, optional): Parameter to adjust bandwidth optimization.
         """
         self.n_splits = n_splits
         self.symm_dims = symmetrize_dims
+        self.bandwidth_prior = bandwidth_prior
 
         # Allow for weights not to be specified
         if weights is None:
@@ -345,6 +348,11 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             # Weight is a length 1 array for LOO
             fom += test_weight[0] * np.log(awkde.evaluate_with_transf(test_data))
 
+        # Add bandwidth prior : -Nevents * beta * sum_p(ln(F_p)) = Nevents * beta * sum_p(ln(h_p))
+        if self.bandwidth_prior is not None:
+            fom += -self.data.shape[0] * self.bandwidth_prior * \
+                   np.sum(np.log(rescale_factors_alpha[:-1]))
+
         return -fom
 
     def kfold_cv_score(self, rescale_factors_alpha, seed=42):
@@ -382,10 +390,17 @@ class KDERescaleOptimization(AdaptiveBwKDE):
                                   bandwidth=self.bandwidth, alpha=alpha_val)
             # No need to symmetrize test data, as FOM values will be identical
             log_kde_eval = np.log(awkde.evaluate_with_transf(test_data))
+
             # Weighted sum of per-event log likelihoods
             fom.append((test_weights * log_kde_eval).sum())
 
-        return -sum(fom)
+        total_fom = sum(fom)
+        # Add bandwidth prior
+        if self.bandwidth_prior is not None:
+            total_fom += -self.data.shape[0] * self.bandwidth_prior * \
+                         np.sum(np.log(rescale_factors_alpha[:-1]))
+        
+        return -total_fom
 
     def optimize_rescale_parameters(self, init_rescale=None, init_alpha=None,
                                     cv_method='kfold_cv', opt_method='Nelder-Mead',
@@ -536,4 +551,3 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return self.fom_val, self.optbw, self.optalpha
-
