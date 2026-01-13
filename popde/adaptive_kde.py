@@ -350,7 +350,8 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
         # Add bandwidth prior : -Nevents * beta * sum_p(ln(F_p)) = Nevents * beta * sum_p(ln(h_p))
         if self.bandwidth_prior is not None:
-            fom += -self.data.shape[0] * self.bandwidth_prior * np.sum(np.log(rescale_factors_alpha[:-1]))
+            fom += -self.data.shape[0] * self.bandwidth_prior * \
+                   np.sum(np.log(rescale_factors_alpha[:-1]))
 
         return -fom
 
@@ -393,11 +394,11 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             # Weighted sum of per-event log likelihoods
             fom.append((test_weights * log_kde_eval).sum())
 
-
         total_fom = sum(fom)
         # Add bandwidth prior
         if self.bandwidth_prior is not None:
-            total_fom += -self.data.shape[0] * self.bandwidth_prior * np.sum(np.log(rescale_factors_alpha[:-1]))
+            total_fom += -self.data.shape[0] * self.bandwidth_prior * \
+                         np.sum(np.log(rescale_factors_alpha[:-1]))
         
         return -total_fom
 
@@ -550,4 +551,3 @@ class AdaptiveKDELeaveOneOutCrossValidation():
         kdeval = train_eval_kde(samples, x_eval, self.optbw, self.optalpha)
 
         return self.fom_val, self.optbw, self.optalpha
-
