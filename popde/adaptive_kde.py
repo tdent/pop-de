@@ -350,7 +350,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
 
         # Add bandwidth prior term
         if self.bandwidth_prior_beta is not None:
-            fom += -self.data.shape[1] * self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
+            fom += -self.kde_data.shape[0] * self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
 
         return -fom
 
@@ -395,7 +395,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         total_fom = sum(fom)
         # Add bandwidth prior term
         if self.bandwidth_prior_beta is not None:
-            total_fom += -self.data.shape[1] * self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
+            total_fom += -self.kde_data.shape[0] * self.bandwidth_prior_beta * np.sum(np.log(rescale_factors_alpha[:-1]))
         
         return -total_fom
 
