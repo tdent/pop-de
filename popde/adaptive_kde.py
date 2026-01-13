@@ -348,7 +348,7 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             # Weight is a length 1 array for LOO
             fom += test_weight[0] * np.log(awkde.evaluate_with_transf(test_data))
 
-        # Add bandwidth prior : Nevents * beta * sum_p(ln(F_p)) = Nevents * beta * sum_p(ln(h_p))
+        # Add bandwidth prior : -Nevents * beta * sum_p(ln(F_p)) = Nevents * beta * sum_p(ln(h_p))
         if self.bandwidth_prior is not None:
             fom += -self.data.shape[1] * self.bandwidth_prior * np.sum(np.log(rescale_factors_alpha[:-1]))
 
