@@ -67,7 +67,7 @@ class SimpleKernelDensityEstimation:
         self.data = np.asarray(data)
         self.ndim = self.data.shape[1]
         self.input_transf = input_transf
-        self.symmetrize_dims = symmetrize_dims
+        self.symm_dims = symmetrize_dims
         self.stdize = stdize
         self.rescale = rescale
 
@@ -176,8 +176,8 @@ class SimpleKernelDensityEstimation:
         if self.input_transf is not None:
             self.kde_data = transf.transform_data(self.kde_data, self.input_transf)
 
-        if self.symmetrize_dims is not None:
-            self.symmetrize_data(self.symmetrize_dims)  # Changes self.kde_data directly
+        if self.symm_dims is not None:
+            self.symmetrize_data(self.symm_dims)  # Changes self.kde_data directly
 
         if self.stdize:
             std_transf = ['stdize'] * self.ndim
