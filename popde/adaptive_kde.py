@@ -274,7 +274,6 @@ class KDERescaleOptimization(AdaptiveBwKDE):
             bandwidth_prior (float, optional): Parameter to adjust bandwidth optimization.
         """
         self.n_splits = n_splits
-        self.symm_dims = symmetrize_dims
         self.bandwidth_prior = bandwidth_prior
 
         # Allow for weights not to be specified
@@ -300,8 +299,6 @@ class KDERescaleOptimization(AdaptiveBwKDE):
         if self.weights is not None:
             self.prepare_weights()
         self.kde_data = self.data
-        if self.symm_dims is not None:
-            self.symmetrize_data(self.symm_dims)
         self.prepare_data()
 
         # Re-initialize pilot KDE with new parameters and re-fit if requested
