@@ -67,6 +67,7 @@ class SimpleKernelDensityEstimation:
         self.data = np.asarray(data)
         self.ndim = self.data.shape[1]
         self.input_transf = input_transf
+        self.symmetrize_dims = symmetrize_dims
         self.stdize = stdize
         self.rescale = rescale
 
@@ -83,33 +84,13 @@ class SimpleKernelDensityEstimation:
 
         self.kde_data = self.data  # Keep self.data for original, transform self.kde_data
 
-        # Symmetrize if wanted
-        if symmetrize_dims is not None:
-            self.symmetrize_data(symmetrize_dims)
-
-        # Do transformation, standardize and rescale input data
+        # Do transformation, symmetrize, standardize and rescale input data
         self.prepare_data()
 
         self.kernel_estimate = None
         # Initialize the KDE
         if do_fit:
             self.fit()
-
-    def normalize_weights(self):
-        """Make them sum to 1.  May be useful for very small or very large weights"""
-        self.kde_weights /= self.kde_weights.sum()
-
-    def prepare_weights(self):
-        """
-        Check and normalize weights
-        """
-        # Check the array
-        self.kde_weights = np.atleast_1d(self.weights).astype(float)
-        if self.kde_weights.ndim != 1:
-            raise ValueError(f"Weights should be one-dimensional! I got {self.weights.ndim} dimensions")
-        if len(self.kde_weights) != self.data.shape[0]:
-            raise ValueError(f"Weights should be same length as input data! I got {len(self.weights)}")
-        self.normalize_weights()
 
     def check_dimensionality(self):
         """
@@ -128,6 +109,22 @@ class SimpleKernelDensityEstimation:
             if len(self.rescale) != self.ndim:
                 raise ValueError("Dimensionality of data array does not match "
                                  "the number of rescaling factors.")
+
+    def normalize_weights(self):
+        """Make them sum to 1.  May be useful for very small or very large weights"""
+        self.kde_weights /= self.kde_weights.sum()
+
+    def prepare_weights(self):
+        """
+        Check and normalize weights
+        """
+        # Check the array
+        self.kde_weights = np.atleast_1d(self.weights).astype(float)
+        if self.kde_weights.ndim != 1:
+            raise ValueError(f"Weights should be one-dimensional! I got {self.weights.ndim} dimensions")
+        if len(self.kde_weights) != self.data.shape[0]:
+            raise ValueError(f"Weights should be same length as input data! I got {len(self.weights)}")
+        self.normalize_weights()
 
     def symmetrize_data(self, dims):
         """
@@ -177,21 +174,18 @@ class SimpleKernelDensityEstimation:
         Transform, standardize and rescale input data into KDE-ready data
         """
         if self.input_transf is not None:
-            self.transf_data = transf.transform_data(self.kde_data, self.input_transf)
-        else:
-            self.transf_data = self.kde_data
+            self.kde_data = transf.transform_data(self.kde_data, self.input_transf)
+
+        if self.symmetrize_dims is not None:
+            self.symmetrize_data(self.symmetrize_dims)  # Changes self.kde_data directly
 
         if self.stdize:
             std_transf = ['stdize'] * self.ndim
-            self.stds = np.std(self.transf_data, axis=0)  # record the stds
-            self.std_data = transf.transform_data(self.transf_data, std_transf)
-        else:
-            self.std_data = self.transf_data
+            self.stds = np.std(self.kde_data, axis=0)  # record the stds
+            self.kde_data = transf.transform_data(self.kde_data, std_transf)
 
-        if self.rescale is not None:  # Finally reassign self.kde_data
-            self.kde_data = transf.transform_data(self.std_data, self.rescale)
-        else:
-            self.kde_data = self.std_data
+        if self.rescale is not None:
+            self.kde_data = transf.transform_data(self.kde_data, self.rescale)
 
     def fit(self):
         """
